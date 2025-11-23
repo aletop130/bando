@@ -45,14 +45,8 @@ neo4j_password = os.getenv("NEO4J_PASSWORD", "password")
 
 neo4j_driver = GraphDatabase.driver(neo4j_uri, auth=(neo4j_username, neo4j_password))
 
-if qdrant_key:
-    qdrant_client = QdrantClient(
-        url=qdrant_url,
-        api_key=qdrant_key,
-    )
-else:
-    qdrant_client = QdrantClient(
-        url=qdrant_url,
+qdrant_client = QdrantClient(
+    url=qdrant_url,
     )
 
 

@@ -1,0 +1,11 @@
+sentence-transformers
+PyMuPDF
+neo4j-graphrag
+qdrant-client
+neo4j
+pydantic
+requests
+python-dotenv
+redis
+regolo
+celery
