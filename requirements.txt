@@ -1,0 +1,14 @@
+neo4j-graphrag
+PyMuPDF
+python-dotenv
+neo4j
+qdrant-client
+sentence-transformers
+pydantic
+regolo
+requests
+celery
+redis
+fastapi
+uvicorn[standard]
+python-multipart
