@@ -99,11 +99,6 @@ function App() {
   const handleSendMessage = async (): Promise<void> => {
     if (!inputMessage.trim() || loadingAnswer) return
 
-    if (status !== 'completed') {
-      alert('Il documento deve essere processato prima di iniziare la chat')
-      return
-    }
-
     const userMessage: ChatMessage = {
       role: 'user',
       content: inputMessage.trim()
@@ -161,22 +156,22 @@ function App() {
     <div className="app">
       <div className="container">
         <h1>📄 GraphRAG Bandi Chat</h1>
-        <p className="subtitle">Carica un bando e chattaci sopra</p>
+        <p className="subtitle">Carica un bando o chatta con quelli già processati</p>
 
-        {/* Upload Section */}
+        {/* Upload Section - Opzionale */}
         <div className="card">
-          <h2>1. Carica Documento</h2>
+          <h2>Carica Nuovo Documento (Opzionale)</h2>
           <div className="upload-section">
             <input
               type="file"
               accept=".pdf"
               onChange={handleFileChange}
-              disabled={uploading || chatStarted}
+              disabled={uploading}
               className="file-input"
             />
             <button
               onClick={handleUpload}
-              disabled={uploading || !file || chatStarted}
+              disabled={uploading || !file}
               className="btn btn-primary"
             >
               {uploading ? 'Caricamento...' : 'Carica PDF'}
@@ -206,12 +201,23 @@ function App() {
           )}
         </div>
 
-        {/* Chat Section */}
-        {status === 'completed' && (
-          <div className="card chat-card">
-            <h2>2. Chat con il Bando</h2>
-            
-            <div className="chat-messages">
+        {/* Chat Section - Sempre visibile */}
+        <div className="card chat-card">
+          <h2>Chat</h2>
+          
+          {status === 'processing' && (
+            <p style={{ padding: '10px', backgroundColor: '#fff3cd', borderRadius: '5px', marginBottom: '15px' }}>
+              ⚙️ Documento in elaborazione... Puoi comunque chattare con i documenti già processati.
+            </p>
+          )}
+          
+          {status === null && messages.length === 0 && (
+            <p style={{ padding: '10px', backgroundColor: '#d1ecf1', borderRadius: '5px', marginBottom: '15px' }}>
+              💡 Carica un nuovo documento per processarlo, oppure chatta con i documenti già presenti nel sistema.
+            </p>
+          )}
+          
+          <div className="chat-messages">
               {messages.map((msg, idx) => (
                 <div key={idx} className={`message ${msg.role}`}>
                   <div className="message-avatar">
@@ -235,28 +241,27 @@ function App() {
                 </div>
               )}
               <div ref={messagesEndRef} />
-            </div>
-
-            <div className="chat-input-section">
-              <textarea
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyDown={handleKeyPress}
-                placeholder="Fai una domanda sul bando... (Premi Invio per inviare, Shift+Invio per andare a capo)"
-                className="chat-input"
-                rows={2}
-                disabled={loadingAnswer}
-              />
-              <button
-                onClick={handleSendMessage}
-                disabled={loadingAnswer || !inputMessage.trim()}
-                className="btn btn-secondary send-btn"
-              >
-                {loadingAnswer ? '⏳' : '📤'}
-              </button>
-            </div>
           </div>
-        )}
+
+          <div className="chat-input-section">
+            <textarea
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyDown={handleKeyPress}
+              placeholder="Fai una domanda sul bando... (Premi Invio per inviare, Shift+Invio per andare a capo)"
+              className="chat-input"
+              rows={2}
+              disabled={loadingAnswer}
+            />
+            <button
+              onClick={handleSendMessage}
+              disabled={loadingAnswer || !inputMessage.trim()}
+              className="btn btn-secondary send-btn"
+            >
+              {loadingAnswer ? '⏳' : '📤'}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )
