@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+python-multipart
+psutil
+pydantic
+requests
+python-dotenv
+redis
+qdrant-client
+neo4j
+celery
