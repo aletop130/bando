@@ -236,6 +236,7 @@ async def chat_with_document(request: ChatRequest):
     """
     Endpoint per chat con il documento processato.
     Accetta una lista di messaggi (conversazione) e restituisce la risposta.
+    Funziona anche se non c'è un documento appena caricato, usa quello già nel database.
     """
     collection_name = request.collection_name or "Bandi"
     
@@ -258,6 +259,18 @@ async def chat_with_document(request: ChatRequest):
         ]
     
     try:
+        # Verifica se la collection esiste
+        try:
+            qdrant_client.get_collection(collection_name)
+        except Exception:
+            return ChatResponse(
+                message=ChatMessage(
+                    role="assistant",
+                    content="⚠️ Nessun documento processato trovato. Carica un documento PDF per iniziare."
+                ),
+                graph_context=None
+            )
+        
         # 1. Retrieval
         retriever_result = retriever_search(
             neo4j_driver,
@@ -281,7 +294,7 @@ async def chat_with_document(request: ChatRequest):
             return ChatResponse(
                 message=ChatMessage(
                     role="assistant",
-                    content="Nessuna entità rilevante trovata per la tua query. Prova a riformulare la domanda o a essere più specifico."
+                    content="Nessuna informazione rilevante trovata per la tua query. Prova a riformulare la domanda o a essere più specifico. Se non hai ancora caricato un documento, carica un PDF per iniziare."
                 ),
                 graph_context=None
             )
