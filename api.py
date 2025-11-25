@@ -20,6 +20,7 @@ from graph_rag_pipeline import (
     format_graph_context,
     graphRAG_run,
     graphRAG_run_with_history,
+    normalize_whitespace,
     neo4j_driver,
     qdrant_client,
     VECTOR_DIM,
@@ -87,10 +88,10 @@ def process_document(job_id: str, pdf_path: str, collection_name: str = "Bandi")
         # 1. Estrazione testo
         processing_status[job_id]["progress"] = "Estrazione testo dal PDF..."
         raw_data = extract_pdf_text_with_tables(pdf_path)
-        
+        clean_data = normalize_whitespace(raw_data)
         # 2. Chunking
         processing_status[job_id]["progress"] = "Creazione chunk..."
-        chunks = chunk_text(raw_data, max_words=800)
+        chunks = chunk_text(clean_data, max_words=800)
         
         if not chunks:
             processing_status[job_id] = {

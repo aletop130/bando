@@ -1,11 +1,4 @@
-sentence-transformers
-PyMuPDF
-neo4j-graphrag
-qdrant-client
-neo4j
-pydantic
+celery
+redis
 requests
 python-dotenv
-redis
-regolo
-celery

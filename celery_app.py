@@ -23,13 +23,13 @@ celery_app = Celery(
 )
 
 celery_app.conf.update(
-    task_acks_late=False,          # ack dopo completamento (coerente col commento)
-    worker_prefetch_multiplier=1, # un task alla volta per worker
-    task_reject_on_worker_lost=True,
+    task_acks_late=True,
+    worker_prefetch_multiplier=1,
     worker_max_tasks_per_child=50,
     task_time_limit=2100,
     task_soft_time_limit=2000,
 )
+
 
 headers = {
     "Content-Type": "application/json",
