@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import time
 import uuid
@@ -16,17 +17,21 @@ from neo4j_graphrag.retrievers import QdrantNeo4jRetriever
 
 from celery_app import regolo_call
 
-from typing import List, Optional
+from typing import List, Optional,Any
+from doctr.io import read_pdf
+from doctr.models import ocr_predictor
 
 
 class GraphEntry(BaseModel):
     node: str
     target_node: str | None
     relationship: str | None
+    attributes: dict[str, Any] | None = None
 
 
 class GraphComponents(BaseModel):
     graph: list[GraphEntry]
+
 
 
 
@@ -57,46 +62,70 @@ embedding_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 VECTOR_DIM = embedding_model.get_sentence_embedding_dimension()
 
 
-# =========================
-# HELPER REGOL0
-# =========================
-
-
+doctr_ocr = ocr_predictor(
+    det_arch="db_mobilenet_v3_large",
+    reco_arch="crnn_vgg16_bn",
+    pretrained=True,
+)
 
 
 # =========================
 # PDF → TESTO (+ pseudo-tabelle)
 # =========================
 
-def build_internal_prompt(prompt: str) -> str:
+def build_internal_prompt(chunk_text: str) -> str:
     return f"""
-Sei un estrattore estremamente preciso di relazioni per grafi di conoscenza.
-DAL TESTO DEVI ESTRARRE IL MAGGIOR NUMERO POSSIBILE DI RELAZIONI CORRETTE TRA ENTITÀ.
+Sei un estrattore estremamente preciso di relazioni per grafi di conoscenza
+da bandi e documenti amministrativi in italiano.
 
-Devi restituire ESCLUSIVAMENTE e SOLAMENTE SENZA ALTRE PAROLE ESTERNE un JSON con la seguente struttura ESATTA:
+DAL TESTO DEVI:
+1. ESTRARRE IL MAGGIOR NUMERO POSSIBILE DI RELAZIONI CORRETTE TRA ENTITÀ.
+2. ASSOCIARE AI NODI O ALLE RELAZIONI GLI ATTRIBUTI NUMERICI (importi in EUR, percentuali, durate, ecc.)
+   quando sono chiaramente collegati.
+
+Devi restituire ESCLUSIVAMENTE un JSON con la seguente struttura ESATTA:
 
 {{
   "graph": [
     {{
-      "node": "Persona/Entità di partenza",
-      "target_node": "Entità collegata",
-      "relationship": "Tipo di relazione"
+      "node": "Nome entità di partenza",
+      "target_node": "Nome entità collegata o null",
+      "relationship": "Tipo di relazione o null",
+      "attributes": {{
+        "chiave_attributo_1": valore_numerico_o_testuale,
+        "chiave_attributo_2": valore_numerico_o_testuale
+      }}
     }}
   ]
 }}
 
-REGOLE GENERALI:
-- Usa ESATTAMENTE le chiavi: "graph", "node", "target_node", "relationship".
-- "node" e "target_node" devono essere nomi brevi e leggibili di concetti/entità
-  (es. "Articolo 2", "Beneficiari", "Requisiti di accesso", "Spesa ammissibile").
-- "relationship" deve essere una breve etichetta testuale (in italiano o inglese)
-  che descrive il tipo di relazione (es. "definisce", "regola", "applica a",
-  "riguarda", "dipende da", "richiede", "fa parte di", "è un tipo di").
+REGOLE:
+- Usa ESATTAMENTE le chiavi: "graph", "node", "target_node", "relationship", "attributes".
+- Se non ci sono attributi per quella relazione, usa "attributes": {{}}
+- Gli attributi numerici devono essere NUMERI (non stringhe), es:
+  - "contributo_massimo_eur": 50000.0
+  - "intensita_aiuto_pct": 0.50
+- NON creare nodi separati per numeri puri (es. "50%" non deve diventare un nodo).
+- I numeri già normalizzati nel testo (es. "EUR_50000.00", "PCT_0.5000") vanno mappati in attributi numerici.
 
-...
+ESEMPI DI BUON ATTRIBUTO:
+- un articolo che definisce il contributo massimo: 
+  node = "Contributo massimo"
+  target_node = "Intervento agevolato"
+  relationship = "LIMITA"
+  attributes = {{"contributo_massimo_eur": 50000.0}}
+
+- una percentuale di cofinanziamento:
+  node = "Cofinanziamento"
+  target_node = "Beneficiari"
+  relationship = "RICHIEDE"
+  attributes = {{"cofinanziamento_min_pct": 0.20}}
+
+SE NON CI SONO RELAZIONI, restituisci:
+{{ "graph": [] }}
 
 Testo da analizzare:
-{prompt}
+\"\"\"{chunk_text}\"\"\"
 """
 
 def parse_graph(raw: str):
@@ -126,31 +155,75 @@ def parse_graph(raw: str):
         print(f"[PARSE] Tentativo di estrazione")
         return []
 
+def is_scanned_page(page: fitz.Page, text_min_chars: int = 80) -> bool:
+    """
+    Ritorna True se la pagina sembra scansionata:
+    - pochissimo testo "nativo"
+    - presenza di immagini
+    """
+    text = page.get_text("text") or ""
+    has_images = len(page.get_images(full=True)) > 0
+    return (len(text.strip()) < text_min_chars) and has_images
+
+
+def doctr_ocr_per_page(pdf_path: str) -> list[str]:
+    """
+    Usa DocTR per fare OCR dell'intero PDF e ritorna una lista di testi per pagina.
+    """
+    doc = read_pdf(pdf_path)
+    result = doctr_ocr(doc)
+    # result.export() -> dict annidato: pages -> blocks -> lines -> words
+    exported = result.export()
+    page_texts: list[str] = []
+
+    for page in exported["pages"]:
+        lines_out = []
+        for block in page["blocks"]:
+            for line in block["lines"]:
+                words = [w["value"] for w in line["words"]]
+                lines_out.append(" ".join(words))
+        page_texts.append("\n".join(lines_out))
+
+    return page_texts
 
 def extract_pdf_text_with_tables(pdf_path: str) -> str:
     """
-    Estrae tutto il testo del PDF, comprese le tabelle (in forma testuale),
-    restituendo un'unica stringa pronta per il chunking.
+    Estrae testo da PDF:
+    - usa PyMuPDF per il testo nativo + pseudo-tabelle
+    - usa DocTR per le pagine scansionate (fallback)
+    Ritorna un unico testo pronto per chunking.
     """
     doc = fitz.open(pdf_path)
-    all_text_blocks = []
+    all_page_texts: list[str] = []
+
+    # 1) Pre-scan: individua pagine scansionate
+    scanned_flags = [is_scanned_page(doc[i]) for i in range(doc.page_count)]
+
+    # 2) Se serve, prepara OCR DocTR una sola volta
+    doctr_pages: list[str] | None = None
+    if any(scanned_flags):
+        print(f"[OCR] Rilevate {sum(scanned_flags)} pagine scansionate, uso DocTR...")
+        doctr_pages = doctr_ocr_per_page(pdf_path)
 
     for page_index in range(doc.page_count):
         page = doc[page_index]
 
-        # Testo normale
-        page_text = page.get_text("text")
+        # testo base
+        page_text = page.get_text("text") or ""
 
-        # Estrazione blocchi: (x0, y0, x1, y1, text, block_no, block_type, ...)
+        # se pagina scansionata, sovrascrivo con OCR
+        if scanned_flags[page_index] and doctr_pages is not None:
+            ocr_text = doctr_pages[page_index]
+            if ocr_text and ocr_text.strip():
+                page_text = ocr_text
+
+        # pseudo-tabelle da PyMuPDF (utile anche su OCR)
         blocks = page.get_text("blocks")
         table_texts = []
 
         for b in blocks:
             text_block = b[4]
-
-            # Heuristica: se contiene colonne, pipe, tab → possibile tabella
             if "|" in text_block or "\t" in text_block:
-                # Normalizzazione per aiutarci nel chunking
                 cleaned = text_block.replace("\t", " | ")
                 table_texts.append(cleaned)
 
@@ -160,28 +233,49 @@ def extract_pdf_text_with_tables(pdf_path: str) -> str:
         else:
             full_page_text = page_text
 
-        all_text_blocks.append(full_page_text)
+        all_page_texts.append(full_page_text)
 
     doc.close()
 
-    # Restituiamo *tutto* come unico grande testo
-    return "\n\n".join(all_text_blocks)
+    full_text = "\n\n".join(all_page_texts)
+    return full_text
 
-def chunk_text(text: str, max_words: int = 400) -> list[str]:
+def normalize_whitespace(text: str) -> str:
+    # rimuovi spazi doppi
+    text = re.sub(r"[ \t]+", " ", text)
+    # normalizza righe vuote multiple
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    # trim globale
+    return text.strip()
+
+
+def chunk_text(
+    text: str,
+    max_words: int = 800,
+    overlap_words: int = 80,
+) -> list[str]:
+    """
+    Chunking word-based con overlap per conservare contesto locale.
+    """
     words = text.split()
-    chunks = []
-    current = []
+    n = len(words)
+    chunks: list[str] = []
 
-    for w in words:
-        current.append(w)
-        if len(current) >= max_words:
-            chunks.append(" ".join(current))
-            current = []
+    if n == 0:
+        return chunks
 
-    if current:
-        chunks.append(" ".join(current))
+    start = 0
+    while start < n:
+        end = min(start + max_words, n)
+        chunk = " ".join(words[start:end])
+        chunks.append(chunk)
+        if end == n:
+            break
+        # avanzamento con overlap
+        start = end - overlap_words
 
     return chunks
+
 
 
 # =========================
@@ -228,6 +322,7 @@ def extract_graph_components(task):
         node = entry.node
         target = entry.target_node
         rel = entry.relationship
+        attrs = entry.attributes or {}
 
         if node not in nodes_chunk:
             nodes_chunk[node] = str(uuid.uuid4())
@@ -238,13 +333,14 @@ def extract_graph_components(task):
         relationships_chunk.append({
             "node": node,
             "target_node": target,
-            "relationship": rel
+            "relationship": rel,
+            "attributes": attrs,
         })
 
     print(f"[EXTRACT] Estratti {len(nodes_chunk)} nodi e {len(relationships_chunk)} relazioni")
     return nodes_chunk, relationships_chunk
 
-def build_graph_from_chunks(chunks, window_size: int = 4):
+def build_graph_from_chunks(chunks, window_size: int = 8):
     """
     Costruisce il grafo da tutti i chunk usando Celery,
     ma tenendo al massimo `window_size` task in coda per volta.
@@ -302,13 +398,23 @@ def build_graph_from_chunks(chunks, window_size: int = 4):
                 src = rel["node"]
                 tgt = rel["target_node"]
                 relationship = rel["relationship"]
+                attrs = rel.get("attributes", {}) or {}
 
                 src_id = temp_to_final[nodes_chunk[src]]
-                tgt_id = temp_to_final[nodes_chunk[tgt]] if tgt else None
+
+                tgt_id = None
+                if tgt:
+                    tgt_id = temp_to_final[nodes_chunk[tgt]]
 
                 all_relationships.append(
-                    {"source": src_id, "target": tgt_id, "type": relationship}
+                    {
+                        "source": src_id,
+                        "target": tgt_id,
+                        "type": relationship,
+                        "attributes": attrs,
+                    }
                 )
+
 
     return all_nodes, all_relationships, chunk_node_mapping
 
@@ -340,14 +446,17 @@ def ingest_to_neo4j(nodes, relationships, driver=None):
         # Relazioni: CREATE per evitare duplicati
         for relationship in relationships:
             session.run(
-                """
-                MATCH (a:Entity {id: $source_id}), (b:Entity {id: $target_id})
-                CREATE (a)-[r:RELATIONSHIP {type: $type}]->(b)
-                """,
-                source_id=relationship["source"],
-                target_id=relationship["target"],
-                type=relationship["type"],
-            )
+            """
+            MATCH (a:Entity {id: $source_id}), (b:Entity {id: $target_id})
+            CREATE (a)-[r:RELATIONSHIP {type: $type}]->(b)
+            SET r += $attributes
+            """,
+            source_id=relationship["source"],
+            target_id=relationship["target"],
+            type=relationship["type"],
+            attributes=relationship.get("attributes", {}),
+        )
+
 
     return nodes
 

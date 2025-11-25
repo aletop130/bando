@@ -27,24 +27,17 @@ services:
       - redis_data:/data
 
   celery-worker:
-    build:
-      context: .
-      dockerfile: dockerfile
-      args:
-        SERVICE: "worker"
-    container_name: celery-worker
-    depends_on:
-      - redis
-      - neo4j
-      - qdrant
-    environment:
-      - REDIS_URL=redis://redis:6379/0
-      - REGOLO_KEY=${REGOLO_KEY}
-      - QDRANT_URL=http://qdrant:6333
-      - NEO4J_URI=bolt://neo4j:7687
-      - NEO4J_USERNAME=neo4j
-      - NEO4J_PASSWORD=password
-    command: celery -A celery_app.celery_app worker --loglevel=info
+      build:
+        context: .
+        dockerfile: dockerfile
+      container_name: celery-worker
+      depends_on:
+        - redis
+      environment:
+        - REDIS_URL=redis://redis:6379/0
+        - REGOLO_KEY=${REGOLO_KEY}
+      command: celery -A celery_app.celery_app worker -l info --concurrency=4
+
 
 volumes:
   neo4j_data:
