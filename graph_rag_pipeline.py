@@ -14,8 +14,8 @@ from sentence_transformers import SentenceTransformer
 
 from qdrant_client import QdrantClient, models
 from neo4j_graphrag.retrievers import QdrantNeo4jRetriever
-
 from celery_app import regolo_call
+from celery import group
 
 from typing import List, Optional,Any
 from doctr.io import read_pdf
@@ -342,10 +342,10 @@ def extract_graph_components(task):
 
 def build_graph_from_chunks(chunks, window_size: int = 8):
     """
-    Costruisce il grafo da tutti i chunk usando Celery,
-    ma tenendo al massimo `window_size` task in coda per volta.
+    Costruisce il grafo da tutti i chunk usando Celery groups
+    per eseguire fino a `window_size` task simultaneamente.
     """
-    print(f"[BUILD] Ho {len(chunks)} chunk, window={window_size}")
+    print(f"[BUILD] Ho {len(chunks)} chunk, concurrency={window_size}")
 
     all_nodes: dict[str, str] = {}
     all_relationships: list[dict] = []
@@ -353,68 +353,93 @@ def build_graph_from_chunks(chunks, window_size: int = 8):
 
     total = len(chunks)
 
+    # Dividi i chunk in gruppi di window_size
     for start in range(0, total, window_size):
         batch = chunks[start:start + window_size]
-        print(f"[BUILD] Schedulo batch chunk {start}–{start + len(batch) - 1}")
+        batch_indices = list(range(start, start + len(batch)))
+        print(f"[BUILD] Schedulo gruppo chunk {start}–{start + len(batch) - 1}")
 
-        batch_tasks: list[tuple[int, object]] = []
+        # Crea un gruppo Celery con tutti i task del batch
+        # Ogni task chiama regolo_llm_parser che ritorna un AsyncResult
+        # Ma per i gruppi, dobbiamo passare direttamente la funzione task
+        group_tasks = []
+        for idx, chunk in zip(batch_indices, batch):
+            # Crea il task usando regolo_call.s() per signature
+            internal_prompt = build_internal_prompt(chunk)
+            group_tasks.append(regolo_call.s(internal_prompt))
+            print(f"[BUILD] Task {idx+1}/{total} aggiunto al gruppo")
 
-        # 1) Schedulo solo il batch corrente
-        for local_idx, chunk in enumerate(batch):
-            idx = start + local_idx
-            try:
-                task = regolo_llm_parser(chunk)  # ritorna AsyncResult da regolo_call.delay(...)
-                batch_tasks.append((idx, task))
-                print(f"[BUILD] Task {idx+1}/{total} schedulato (id={task.id})")
-            except Exception as e:
-                print(f"[BUILD ERROR] Errore nella schedulazione chunk {idx}: {e}")
+        # Crea e esegui il gruppo Celery
+        job = group(group_tasks)
+        print(f"[BUILD] Esecuzione gruppo con {len(group_tasks)} task in parallelo...")
+        result_group = job.apply_async()
 
-        # 2) Raccolgo i risultati del batch PRIMA di schedulare quelli dopo
-        for idx, task in batch_tasks:
-            try:
-                nodes_chunk, rels_chunk = extract_graph_components(task)
-                print(
-                    f"[BUILD] Chunk {idx+1}/{total} processato: "
-                    f"{len(nodes_chunk)} nodi, {len(rels_chunk)} relazioni"
-                )
-            except Exception as e:
-                print(f"[BUILD ERROR] Errore nel processare chunk {idx}: {e}")
-                nodes_chunk, rels_chunk = {}, []
+        # Attendi che tutti i task del gruppo completino e raccogli i risultati
+        try:
+            # get() su un GroupResult ritorna una lista di risultati nell'ordine dei task
+            raw_results = result_group.get(timeout=400)
+            
+            # Processa ogni risultato del gruppo
+            for idx, raw in zip(batch_indices, raw_results):
+                try:
+                    # Crea un task fittizio per usare extract_graph_components
+                    # che si aspetta un task con .get()
+                    class MockTask:
+                        def __init__(self, result):
+                            self._result = result
+                        def get(self, timeout=None):
+                            return self._result
+                    
+                    mock_task = MockTask(raw)
+                    nodes_chunk, rels_chunk = extract_graph_components(mock_task)
+                    print(
+                        f"[BUILD] Chunk {idx+1}/{total} processato: "
+                        f"{len(nodes_chunk)} nodi, {len(rels_chunk)} relazioni"
+                    )
+                except Exception as e:
+                    print(f"[BUILD ERROR] Errore nel processare chunk {idx}: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    nodes_chunk, rels_chunk = {}, []
 
-            # --- MERGE GLOBALE (stesso schema di prima) ---
-            temp_to_final: dict[str, str] = {}
-            chunk_global_ids: list[str] = []
+                # --- MERGE GLOBALE (stesso schema di prima) ---
+                temp_to_final: dict[str, str] = {}
+                chunk_global_ids: list[str] = []
 
-            for name, temp_id in nodes_chunk.items():
-                if name not in all_nodes:
-                    all_nodes[name] = temp_id
-                temp_to_final[temp_id] = all_nodes[name]
-                chunk_global_ids.append(all_nodes[name])
+                for name, temp_id in nodes_chunk.items():
+                    if name not in all_nodes:
+                        all_nodes[name] = temp_id
+                    temp_to_final[temp_id] = all_nodes[name]
+                    chunk_global_ids.append(all_nodes[name])
 
-            if chunk_global_ids:
-                chunk_node_mapping.append(chunk_global_ids)
+                if chunk_global_ids:
+                    chunk_node_mapping.append(chunk_global_ids)
 
-            for rel in rels_chunk:
-                src = rel["node"]
-                tgt = rel["target_node"]
-                relationship = rel["relationship"]
-                attrs = rel.get("attributes", {}) or {}
+                for rel in rels_chunk:
+                    src = rel["node"]
+                    tgt = rel["target_node"]
+                    relationship = rel["relationship"]
+                    attrs = rel.get("attributes", {}) or {}
 
-                src_id = temp_to_final[nodes_chunk[src]]
+                    src_id = temp_to_final[nodes_chunk[src]]
 
-                tgt_id = None
-                if tgt:
-                    tgt_id = temp_to_final[nodes_chunk[tgt]]
+                    tgt_id = None
+                    if tgt:
+                        tgt_id = temp_to_final[nodes_chunk[tgt]]
 
-                all_relationships.append(
-                    {
-                        "source": src_id,
-                        "target": tgt_id,
-                        "type": relationship,
-                        "attributes": attrs,
-                    }
-                )
+                    all_relationships.append(
+                        {
+                            "source": src_id,
+                            "target": tgt_id,
+                            "type": relationship,
+                            "attributes": attrs,
+                        }
+                    )
 
+        except Exception as e:
+            print(f"[BUILD ERROR] Errore nell'esecuzione del gruppo: {e}")
+            import traceback
+            traceback.print_exc()
 
     return all_nodes, all_relationships, chunk_node_mapping
 
