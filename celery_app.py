@@ -10,7 +10,7 @@ import time
 
 REGOLO_API_URL = "https://api.regolo.ai/v1/chat/completions"
 REGOLO_KEY = os.getenv("REGOLO_KEY")
-REGOLO_MODEL = "Llama-3.3-70B-Instruct"
+REGOLO_MODEL = "gpt-oss-120b"
 
 if not REGOLO_KEY:
     print("[WARN] REGOLO_KEY non impostata nell'ambiente del worker Celery")
