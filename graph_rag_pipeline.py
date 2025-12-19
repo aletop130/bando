@@ -172,6 +172,7 @@ def doctr_ocr_per_page(pdf_path: str) -> list[str]:
     """
     doc = read_pdf(pdf_path)
     result = doctr_ocr(doc)
+
     # result.export() -> dict annidato: pages -> blocks -> lines -> words
     exported = result.export()
     page_texts: list[str] = []
@@ -576,7 +577,6 @@ def get_qdrant_context(user_query: str):
     # Restituisci stringa formattata
     return "\n\n".join([f"[{i+1}] {text}" for i, text in enumerate(texts)]) if texts else "Nessun riferimento trovato."
 
-    return results
 
 
 def generate_query_embedding(query: str):
@@ -612,21 +612,52 @@ def retriever_search(
         top_k=5,
     )
 
-    # 2. Cerca direttamente i migliori 5 punti Qdrant per la query
-    qdrant_results = qdrant_client.query_points(
-        collection_name=collection_name,
-        query=query_vector,
-        limit=5,
-    )
-
-    # 3. Estrai i testi dai punti Qdrant
+    # 2. Estrai gli ID dei nodi trovati dal retriever
+    entity_ids = []
+    if hasattr(retriever_result, 'items'):
+        for item in retriever_result.items:
+            try:
+                # Estrai l'ID dal contenuto
+                content = item.content
+                if "'id': '" in content:
+                    entity_id = content.split("'id': '")[1].split("'")[0]
+                    entity_ids.append(entity_id)
+                elif '"id": "' in content:
+                    entity_id = content.split('"id": "')[1].split('"')[0]
+                    entity_ids.append(entity_id)
+            except Exception as e:
+                print(f"[RETRIEVER] Errore estrazione ID: {e}")
+                continue
+    
+    # 3. Ora cerca in Qdrant usando gli stessi ID per avere coerenza
     qdrant_texts = []
-    if hasattr(qdrant_results, 'points'):
-        for point in qdrant_results.points:
-            if point.payload and 'text' in point.payload:
-                qdrant_texts.append(point.payload['text'])
+    qdrant_node_mappings = []
+    
+    if entity_ids:
+        # Cerca i punti Qdrant che hanno questi node_id nel payload
+        points = qdrant_client.scroll(
+            collection_name=collection_name,
+            scroll_filter=models.Filter(
+                must=[
+                    models.FieldCondition(
+                        key="nodes",
+                        match=models.MatchAny(any=entity_ids)
+                    )
+                ]
+            ),
+            limit=100
+        )[0]  # scroll restituisce (points, offset)
+        
+        for point in points:
+            if point.payload:
+                # Prendi il testo
+                if 'text' in point.payload:
+                    qdrant_texts.append(point.payload['text'])
+                # Prendi il mapping nodi
+                if 'nodes' in point.payload:
+                    qdrant_node_mappings.extend(point.payload['nodes'])
 
-    return retriever_result, qdrant_texts
+    return retriever_result, qdrant_texts, list(set(entity_ids)), list(set(qdrant_node_mappings))
 
 
 # =========================
@@ -634,79 +665,152 @@ def retriever_search(
 # =========================
 
 def fetch_related_graph(neo4j_client, entity_ids):
-    query = """
-    MATCH (e:Entity)-[r1]-(n1)-[r2]-(n2)
-    WHERE e.id IN $entity_ids
-    RETURN e, r1 as r, n1 as related, r2, n2
-    UNION
-    MATCH (e:Entity)-[r]-(related)
-    WHERE e.id IN $entity_ids
-    RETURN e, r, related, null as r2, null as n2
     """
+    Recupera il subgraph con TUTTI gli attributi dei NODI
+    """
+    query = """
+    // Query migliorata che include attributi dei NODI
+    MATCH (e:Entity)-[r1:RELATIONSHIP]-(n1:Entity)
+    WHERE e.id IN $entity_ids
+    OPTIONAL MATCH (n1)-[r2:RELATIONSHIP]-(n2:Entity)
+    RETURN 
+      e as source_node,
+      e.id as source_id,
+      e.name as source_name,
+      r1.type as rel1_type,
+      n1 as target1_node,
+      n1.id as target1_id,
+      n1.name as target1_name,
+      r2.type as rel2_type,
+      n2 as target2_node,
+      n2.id as target2_id,
+      n2.name as target2_name
+    """
+    
     with neo4j_client.session() as session:
         result = session.run(query, entity_ids=entity_ids)
         subgraph = []
+        
         for record in result:
-            subgraph.append(
-                {
-                    "entity": record["e"],
-                    "relationship": record["r"],
-                    "related_node": record["related"],
+            # Prima relazione (e -> n1)
+            subgraph.append({
+                "source": {
+                    "id": record["source_id"],
+                    "name": record["source_name"],
+                    "attributes": dict(record["source_node"]) if record["source_node"] else {}
+                },
+                "target": {
+                    "id": record["target1_id"],
+                    "name": record["target1_name"],
+                    "attributes": dict(record["target1_node"]) if record["target1_node"] else {}
+                },
+                "relationship": {
+                    "type": record["rel1_type"]
                 }
-            )
-            if record["r2"] and record["n2"]:
-                subgraph.append(
-                    {
-                        "entity": record["related"],
-                        "relationship": record["r2"],
-                        "related_node": record["n2"],
+            })
+            
+            # Seconda relazione se esiste (n1 -> n2)
+            if record["target2_id"]:
+                subgraph.append({
+                    "source": {
+                        "id": record["target1_id"],
+                        "name": record["target1_name"],
+                        "attributes": dict(record["target1_node"]) if record["target1_node"] else {}
+                    },
+                    "target": {
+                        "id": record["target2_id"],
+                        "name": record["target2_name"],
+                        "attributes": dict(record["target2_node"]) if record["target2_node"] else {}
+                    },
+                    "relationship": {
+                        "type": record["rel2_type"]
                     }
-                )
+                })
+    
     return subgraph
 
 
 def format_graph_context(subgraph, qdrant_texts):
     """
-    Formatta il contesto del grafo Neo4j e i testi Qdrant.
+    Formatta il contesto del grafo Neo4j in modo STRUTTURATO per il LLM
     """
-    nodes = set()
-    edges = []
-
+    nodes_info = {}  # id -> {name, attributes}
+    edges_info = []
+    
     for entry in subgraph:
-        entity = entry["entity"]
-        related = entry["related_node"]
-        relationship = entry["relationship"]
-
-        nodes.add(entity["name"])
-        nodes.add(related["name"])
-
-        edges.append(f"{entity['name']} {relationship['type']} {related['name']}")
-
+        source = entry["source"]
+        target = entry["target"]
+        rel_type = entry["relationship"]["type"]
+        
+        # Memorizza informazioni sui nodi con attributi
+        if source["id"] not in nodes_info:
+            nodes_info[source["id"]] = {
+                "name": source["name"],
+                "attributes": source.get("attributes", {})
+            }
+        if target["id"] not in nodes_info:
+            nodes_info[target["id"]] = {
+                "name": target["name"],
+                "attributes": target.get("attributes", {})
+            }
+        
+        # Formatta l'arco
+        edge_str = f"{source['name']} --[{rel_type}]--> {target['name']}"
+        edges_info.append(edge_str)
+    
+    # Formatta i nodi in modo STRUTTURATO per il LLM
+    nodes_formatted = []
+    for node_id, info in nodes_info.items():
+        name = info["name"]
+        attrs = info.get("attributes", {})
+        
+        if attrs:
+            # Filtra attributi standard
+            filtered_attrs = {}
+            for k, v in attrs.items():
+                if k.lower() not in ["id", "name", "label", "type", "__properties__"]:
+                    filtered_attrs[k] = v
+            
+            if filtered_attrs:
+                # FORMATTAZIONE STRUTTURATA: un nodo per riga con indentazione
+                attrs_lines = []
+                for attr_key, attr_value in filtered_attrs.items():
+                    attrs_lines.append(f"    - {attr_key}: {attr_value}")
+                
+                attrs_str = "\n".join(attrs_lines)
+                nodes_formatted.append(f"{name}:\n{attrs_str}")
+            else:
+                nodes_formatted.append(name)
+        else:
+            nodes_formatted.append(name)
+    
     # Formatta i testi Qdrant
     qdrant_context = "\n\n".join([
         f"[Riferimento {i+1}]:\n{text}"
         for i, text in enumerate(qdrant_texts)
     ]) if qdrant_texts else "Nessun riferimento trovato."
-
+    
     return {
-        "nodes": list(nodes),
-        "edges": edges,
-        "qdrant_context": qdrant_context
+        "nodes": nodes_formatted,  # Ora formattato strutturalmente!
+        "edges": edges_info,
+        "qdrant_context": qdrant_context,
+        "subgraph_raw": subgraph,
+        "nodes_dict": nodes_info  # Manteniamo anche la versione dict per debug
     }
 
-
 def graphRAG_run(graph_context, user_query: str) -> str:
-    nodes_str = ", ".join(graph_context["nodes"])
+    # Ora nodes_formatted è già una lista di stringhe ben formattate
+    nodes_str = "\n".join(graph_context["nodes"])  # Usa \n invece di ", "
     edges_str = "; ".join(graph_context["edges"])
     qdrant_context = graph_context.get("qdrant_context", "")
     
     prompt = f"""
 Sei un assistente che risponde usando SOLO il seguente grafo di conoscenza come contesto.
 
-NODI:
+NODI (ogni nodo ha i suoi attributi elencati sotto):
 {nodes_str}
 
-ARCHI:
+ARCHI (relazioni tra nodi):
 {edges_str}
 
 RIFERIMENTI DAL DOCUMENTO:
@@ -715,7 +819,8 @@ RIFERIMENTI DAL DOCUMENTO:
 Domanda dell'utente:
 "{user_query}"
 
-Rispondi in modo sintetico, preciso e aderente al grafo e ai riferimenti del documento, in modo che l'utente possa comprendere la risposta.
+Analizza attentamente gli attributi dei nodi e le relazioni tra di essi.
+Rispondi in modo sintetico, preciso e aderente al grafo, CITANDO ESPLICITAMENTE GLI ATTRIBUTI DEI NODI quando rilevanti per la risposta.
 """
     task = regolo_call.delay(prompt)
     response = task.get(timeout=400)
@@ -726,9 +831,9 @@ Rispondi in modo sintetico, preciso e aderente al grafo e ai riferimenti del doc
 def graphRAG_run_with_history(graph_context, user_query: str, conversation_history: Optional[List[dict]] = None) -> str:
     """
     Versione migliorata di graphRAG_run che può usare la storia della conversazione
-    per dare risposte più contestuali.
+    per dare risposte più contestuali, con formattazione strutturata dei nodi.
     """
-    nodes_str = ", ".join(graph_context["nodes"])
+    nodes_str = "\n".join(graph_context["nodes"])  # Ora è già formattato strutturalmente
     edges_str = "; ".join(graph_context["edges"])
     qdrant_context = graph_context.get("qdrant_context", "")
     
@@ -741,14 +846,14 @@ def graphRAG_run_with_history(graph_context, user_query: str, conversation_histo
             content = msg.get("content", "")
             history_context += f"{role}: {content}\n"
         history_context += "\nUsa questo contesto per dare risposte più coerenti e contestuali. Se la domanda fa riferimento a qualcosa detto prima, usa quel contesto.\n"
-    print(qdrant_context)
+    
     prompt = f"""
 Sei un assistente che risponde usando SOLO il seguente grafo di conoscenza come contesto.
 {history_context}
-NODI:
+NODI (ogni nodo ha i suoi attributi elencati sotto, usa questi dettagli nella risposta):
 {nodes_str}
 
-ARCHI:
+ARCHI (relazioni tra nodi):
 {edges_str}
 
 RIFERIMENTI DAL DOCUMENTO:
@@ -757,8 +862,19 @@ RIFERIMENTI DAL DOCUMENTO:
 Domanda dell'utente:
 "{user_query}"
 
-Rispondi in modo sintetico, preciso e aderente al grafo e ai riferimenti del documento, in modo che l'utente possa comprendere la risposta.
-Se la domanda fa riferimento a qualcosa detto prima nella conversazione, usa quel contesto per dare una risposta più completa e coerente.
+Analizza attentamente:
+1. Gli attributi di ogni nodo (informazioni sotto ogni nome di nodo)
+2. Le relazioni tra i nodi (archi)
+3. Il contesto della conversazione precedente (se presente)
+4. I riferimenti dal documento
+
+Rispondi in modo sintetico, preciso e aderente al grafo:
+- CITANDO ESPLICITAMENTE GLI ATTRIBUTI DEI NODI quando rilevanti
+- MENZIONANDO LE RELAZIONI tra i nodi quando importanti
+- USA I VALORI SPECIFICI degli attributi se la domanda li richiede
+- RIFERISCITI AL CONTESTO della conversazione se appropriato
+
+La risposta deve essere informativa ma concisa.
 """
     task = regolo_call.delay(prompt)
     response = task.get(timeout=400)

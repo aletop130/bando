@@ -8,6 +8,7 @@ import time
 from typing import Optional, List
 import asyncio
 
+# Import delle nuove funzioni con attributi dei nodi
 from graph_rag_pipeline import (
     extract_pdf_text_with_tables,
     chunk_text,
@@ -15,11 +16,12 @@ from graph_rag_pipeline import (
     ingest_to_neo4j,
     ingest_to_qdrant,
     create_collection,
-    retriever_search,
-    fetch_related_graph,
-    format_graph_context,
-    graphRAG_run,
-    graphRAG_run_with_history,
+    # FUNZIONI AGGIORNATE
+    retriever_search,        # Ora restituisce 4 valori: (retriever_result, qdrant_texts, entity_ids, qdrant_node_mappings)
+    fetch_related_graph,     # Ora include attributi dei NODI
+    format_graph_context,    # Ora formatta attributi dei NODI
+    graphRAG_run,            # Prompt aggiornato per attributi nodi
+    graphRAG_run_with_history,  # Prompt aggiornato per attributi nodi
     normalize_whitespace,
     neo4j_driver,
     qdrant_client,
@@ -31,7 +33,7 @@ app = FastAPI(title="GraphRAG Bandi API")
 # CORS per permettere chiamate dal frontend React
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # React dev server
+    allow_origins=["http://localhost:3000", "http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -40,7 +42,6 @@ app.add_middleware(
 STORAGE_DIR = "uploads"
 os.makedirs(STORAGE_DIR, exist_ok=True)
 
-# Stato globale per tracking processing
 processing_status = {}
 
 
@@ -58,6 +59,9 @@ class UploadResponse(BaseModel):
 class QueryResponse(BaseModel):
     answer: str
     graph_context: Optional[dict] = None
+    # Aggiungiamo info su cosa è stato trovato
+    entity_ids_found: Optional[List[str]] = None
+    qdrant_texts_count: Optional[int] = None
 
 
 class StatusResponse(BaseModel):
@@ -68,16 +72,19 @@ class StatusResponse(BaseModel):
 
 
 class ChatMessage(BaseModel):
-    role: str  # "user" o "assistant"
+    role: str
     content: str
+
 
 class ChatRequest(BaseModel):
     messages: List[ChatMessage]
     collection_name: Optional[str] = "Bandi"
 
+
 class ChatResponse(BaseModel):
     message: ChatMessage
     graph_context: Optional[dict] = None
+    entity_ids_found: Optional[List[str]] = None
 
 
 def process_document(job_id: str, pdf_path: str, collection_name: str = "Bandi"):
@@ -85,13 +92,12 @@ def process_document(job_id: str, pdf_path: str, collection_name: str = "Bandi")
     try:
         processing_status[job_id] = {"status": "processing", "progress": "Lettura PDF..."}
         
-        # 1. Estrazione testo
         processing_status[job_id]["progress"] = "Estrazione testo dal PDF..."
         raw_data = extract_pdf_text_with_tables(pdf_path)
         clean_data = normalize_whitespace(raw_data)
-        # 2. Chunking
+        
         processing_status[job_id]["progress"] = "Creazione chunk..."
-        chunks = chunk_text(clean_data, max_words=150, overlap_words=25)
+        chunks = chunk_text(clean_data, max_words=250, overlap_words=35)
         
         if not chunks:
             processing_status[job_id] = {
@@ -100,19 +106,15 @@ def process_document(job_id: str, pdf_path: str, collection_name: str = "Bandi")
             }
             return
         
-        # 3. Creazione collection Qdrant
         processing_status[job_id]["progress"] = "Creazione collection Qdrant..."
         create_collection(qdrant_client, collection_name, VECTOR_DIM)
         
-        # 4. Estrazione grafo
-        processing_status[job_id]["progress"] = "Estrazione grafo di conoscenza (questo può richiedere tempo)..."
+        processing_status[job_id]["progress"] = "Estrazione grafo di conoscenza..."
         nodes, relationships, chunk_node_mapping = build_graph_from_chunks(chunks)
         
-        # 5. Ingest Neo4j
         processing_status[job_id]["progress"] = "Salvataggio in Neo4j..."
         ingest_to_neo4j(nodes, relationships)
         
-        # 6. Ingest Qdrant
         processing_status[job_id]["progress"] = "Salvataggio in Qdrant..."
         ingest_to_qdrant(collection_name, chunks, chunk_node_mapping)
         
@@ -144,7 +146,6 @@ async def upload_document(
     if not file.filename.endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Solo file PDF sono supportati")
     
-    # Salva il file
     job_id = str(uuid.uuid4())
     file_path = os.path.join(STORAGE_DIR, f"{job_id}_{file.filename}")
     
@@ -152,10 +153,8 @@ async def upload_document(
         content = await file.read()
         f.write(content)
     
-    # Inizializza stato
     processing_status[job_id] = {"status": "queued", "progress": "In coda..."}
     
-    # Avvia processing in background
     background_tasks.add_task(process_document, job_id, file_path)
     
     return UploadResponse(
@@ -186,44 +185,36 @@ async def query_document(request: QueryRequest):
     collection_name = request.collection_name or "Bandi"
     
     try:
-        # 1. Retrieval
-        retriever_result, qdrant_texts = retriever_search(
+        # 1. Retrieval - USIAMO LA NUOVA VERSIONE che restituisce 4 valori
+        retriever_result, qdrant_texts, entity_ids, qdrant_node_mappings = retriever_search(
             neo4j_driver,
             qdrant_client,
             collection_name,
             request.query
         )
-       
-        # 2. Estrai entity IDs
-        entity_ids = []
-        for item in getattr(retriever_result, "items", []):
-            try:
-                # Prova a estrarre l'ID dal content
-                content_str = str(item.content)
-                if "'id': '" in content_str:
-                    entity_id = content_str.split("'id': '")[1].split("'")[0]
-                    entity_ids.append(entity_id)
-            except Exception:
-                continue
         
         if not entity_ids:
             return QueryResponse(
                 answer="Nessuna entità rilevante trovata per la tua query. Prova a riformulare la domanda.",
-                graph_context=None
+                graph_context=None,
+                entity_ids_found=[],
+                qdrant_texts_count=0
             )
         
-        # 3. Fetch subgraph
+        # 2. Fetch subgraph - USIAMO LA NUOVA VERSIONE con attributi dei nodi
         subgraph = fetch_related_graph(neo4j_driver, entity_ids)
         
-        # 4. Format context (include qdrant_texts)
+        # 3. Format context - USIAMO LA NUOVA VERSIONE con attributi dei nodi
         graph_context = format_graph_context(subgraph, qdrant_texts)
         
-        # 5. GraphRAG (non serve più passare qdrant_context separato)
+        # 4. GraphRAG - USIAMO LA NUOVA VERSIONE che sa gestire attributi dei nodi
         answer = graphRAG_run(graph_context, request.query)
         
         return QueryResponse(
             answer=answer,
-            graph_context=graph_context
+            graph_context=graph_context,
+            entity_ids_found=entity_ids,
+            qdrant_texts_count=len(qdrant_texts)
         )
         
     except Exception as e:
@@ -236,22 +227,19 @@ async def query_document(request: QueryRequest):
 async def chat_with_document(request: ChatRequest):
     """
     Endpoint per chat con il documento processato.
-    Accetta una lista di messaggi (conversazione) e restituisce la risposta.
-    Funziona anche se non c'è un documento appena caricato, usa quello già nel database.
+    Ora con supporto per attributi dei nodi nel grafo.
     """
     collection_name = request.collection_name or "Bandi"
     
     if not request.messages:
         raise HTTPException(status_code=400, detail="La lista dei messaggi non può essere vuota")
     
-    # L'ultimo messaggio è la query corrente
     last_message = request.messages[-1]
     if last_message.role != "user":
         raise HTTPException(status_code=400, detail="L'ultimo messaggio deve essere dell'utente")
     
     user_query = last_message.content
     
-    # Prepara la storia della conversazione (escludendo l'ultimo messaggio)
     conversation_history = None
     if len(request.messages) > 1:
         conversation_history = [
@@ -269,44 +257,35 @@ async def chat_with_document(request: ChatRequest):
                     role="assistant",
                     content="⚠️ Nessun documento processato trovato. Carica un documento PDF per iniziare."
                 ),
-                graph_context=None
+                graph_context=None,
+                entity_ids_found=None
             )
         
-        # 1. Retrieval
-        retriever_result, qdrant_texts = retriever_search(
+        # 1. Retrieval - NUOVA VERSIONE con 4 valori restituiti
+        retriever_result, qdrant_texts, entity_ids, qdrant_node_mappings = retriever_search(
             neo4j_driver,
             qdrant_client,
             collection_name,
             user_query
         )
         
-        # 2. Estrai entity IDs
-        entity_ids = []
-        for item in getattr(retriever_result, "items", []):
-            try:
-                content_str = str(item.content)
-                if "'id': '" in content_str:
-                    entity_id = content_str.split("'id': '")[1].split("'")[0]
-                    entity_ids.append(entity_id)
-            except Exception:
-                continue
-        
         if not entity_ids:
             return ChatResponse(
                 message=ChatMessage(
                     role="assistant",
-                    content="Nessuna informazione rilevante trovata per la tua query. Prova a riformulare la domanda o a essere più specifico. Se non hai ancora caricato un documento, carica un PDF per iniziare."
+                    content="Nessuna informazione rilevante trovata per la tua query. Prova a riformulare la domanda o a essere più specifico."
                 ),
-                graph_context=None
+                graph_context=None,
+                entity_ids_found=[]
             )
         
-        # 3. Fetch subgraph
+        # 2. Fetch subgraph - NUOVA VERSIONE con attributi dei nodi
         subgraph = fetch_related_graph(neo4j_driver, entity_ids)
         
-        # 4. Format context (include qdrant_texts)
+        # 3. Format context - NUOVA VERSIONE con attributi dei nodi
         graph_context = format_graph_context(subgraph, qdrant_texts)
         
-        # 5. GraphRAG con storia conversazionale
+        # 4. GraphRAG con storia conversazionale - NUOVA VERSIONE che gestisce attributi nodi
         answer = graphRAG_run_with_history(graph_context, user_query, conversation_history)
         
         return ChatResponse(
@@ -314,7 +293,8 @@ async def chat_with_document(request: ChatRequest):
                 role="assistant",
                 content=answer
             ),
-            graph_context=graph_context
+            graph_context=graph_context,
+            entity_ids_found=entity_ids
         )
         
     except Exception as e:
@@ -327,11 +307,45 @@ async def chat_with_document(request: ChatRequest):
 async def list_collections():
     """Endpoint per verificare quali collection sono disponibili"""
     try:
-        # Qdrant non ha un metodo diretto per listare, ma possiamo provare a verificare
-        # In alternativa, potresti mantenere una lista in memoria o in DB
+        # Potremmo voler tenere traccia delle collection create
+        # Per ora restituiamo un messaggio generico
         return {
             "message": "Usa il nome della collection usata durante l'upload",
-            "default": "Bandi"
+            "default": "Bandi",
+            "note": "Il sistema supporta attributi dei nodi nel grafo di conoscenza"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/health")
+async def health_check():
+    """Endpoint per verificare lo stato dei servizi"""
+    try:
+        neo4j_healthy = False
+        qdrant_healthy = False
+        
+        # Verifica Neo4j
+        try:
+            with neo4j_driver.session() as session:
+                result = session.run("RETURN 1 as test")
+                if result.single()["test"] == 1:
+                    neo4j_healthy = True
+        except:
+            pass
+        
+        # Verifica Qdrant
+        try:
+            collections = qdrant_client.get_collections()
+            qdrant_healthy = True
+        except:
+            pass
+        
+        return {
+            "neo4j": "healthy" if neo4j_healthy else "unhealthy",
+            "qdrant": "healthy" if qdrant_healthy else "unhealthy",
+            "api": "healthy",
+            "features": "graph_with_node_attributes"
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -339,7 +353,11 @@ async def list_collections():
 
 @app.get("/")
 async def root():
-    return {"message": "GraphRAG Bandi API", "version": "1.0"}
+    return {
+        "message": "GraphRAG Bandi API con attributi dei nodi",
+        "version": "2.0",
+        "feature": "Graph con attributi dei nodi invece che delle relazioni"
+    }
 
 
 if __name__ == "__main__":
