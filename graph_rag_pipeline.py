@@ -340,7 +340,7 @@ def extract_graph_components(task):
     print(f"[EXTRACT] Estratti {len(nodes_chunk)} nodi e {len(relationships_chunk)} relazioni")
     return nodes_chunk, relationships_chunk
 
-def build_graph_from_chunks(chunks, window_size: int = 8):
+def build_graph_from_chunks(chunks, window_size: int = 100):
     """
     Costruisce il grafo da tutti i chunk usando Celery groups
     per eseguire fino a `window_size` task simultaneamente.
@@ -561,6 +561,22 @@ def ingest_to_qdrant(
     print(f"Inseriti {len(points)} punti in Qdrant.")
     return len(points)
 
+def get_qdrant_context(user_query: str):
+    results = qdrant_client.query_points(
+        collection_name = "Bandi",
+        query = generate_query_embedding(user_query),
+        limit = 5,
+    )
+
+    texts = []
+    for point in results.points:
+        if point.payload and 'text' in point.payload:
+            texts.append(point.payload['text'])
+    
+    # Restituisci stringa formattata
+    return "\n\n".join([f"[{i+1}] {text}" for i, text in enumerate(texts)]) if texts else "Nessun riferimento trovato."
+
+    return results
 
 
 def generate_query_embedding(query: str):
@@ -574,6 +590,12 @@ def retriever_search(
     collection_name: str,
     query: str,
 ):
+    """
+    Cerca i migliori nodi Neo4j e i migliori punti Qdrant associati.
+    Restituisce (retriever_result, qdrant_texts) dove:
+    - retriever_result: risultati del QdrantNeo4jRetriever con i nodi
+    - qdrant_texts: lista dei testi dei migliori 5 punti Qdrant
+    """
     retriever = QdrantNeo4jRetriever(
         driver=neo4j_driver,
         client=qdrant_client,
@@ -584,12 +606,27 @@ def retriever_search(
 
     query_vector = generate_query_embedding(query)
 
-    results = retriever.search(
+    # 1. Cerca i migliori nodi Neo4j tramite retriever
+    retriever_result = retriever.search(
         query_vector=query_vector,
         top_k=5,
     )
 
-    return results
+    # 2. Cerca direttamente i migliori 5 punti Qdrant per la query
+    qdrant_results = qdrant_client.query_points(
+        collection_name=collection_name,
+        query=query_vector,
+        limit=5,
+    )
+
+    # 3. Estrai i testi dai punti Qdrant
+    qdrant_texts = []
+    if hasattr(qdrant_results, 'points'):
+        for point in qdrant_results.points:
+            if point.payload and 'text' in point.payload:
+                qdrant_texts.append(point.payload['text'])
+
+    return retriever_result, qdrant_texts
 
 
 # =========================
@@ -628,7 +665,10 @@ def fetch_related_graph(neo4j_client, entity_ids):
     return subgraph
 
 
-def format_graph_context(subgraph):
+def format_graph_context(subgraph, qdrant_texts):
+    """
+    Formatta il contesto del grafo Neo4j e i testi Qdrant.
+    """
     nodes = set()
     edges = []
 
@@ -642,12 +682,24 @@ def format_graph_context(subgraph):
 
         edges.append(f"{entity['name']} {relationship['type']} {related['name']}")
 
-    return {"nodes": list(nodes), "edges": edges}
+    # Formatta i testi Qdrant
+    qdrant_context = "\n\n".join([
+        f"[Riferimento {i+1}]:\n{text}"
+        for i, text in enumerate(qdrant_texts)
+    ]) if qdrant_texts else "Nessun riferimento trovato."
+
+    return {
+        "nodes": list(nodes),
+        "edges": edges,
+        "qdrant_context": qdrant_context
+    }
 
 
 def graphRAG_run(graph_context, user_query: str) -> str:
     nodes_str = ", ".join(graph_context["nodes"])
     edges_str = "; ".join(graph_context["edges"])
+    qdrant_context = graph_context.get("qdrant_context", "")
+    
     prompt = f"""
 Sei un assistente che risponde usando SOLO il seguente grafo di conoscenza come contesto.
 
@@ -657,10 +709,13 @@ NODI:
 ARCHI:
 {edges_str}
 
-Domanda dell'utente:
-\"{user_query}\"
+RIFERIMENTI DAL DOCUMENTO:
+{qdrant_context}
 
-Rispondi in modo sintetico, preciso e aderente al grafo, in modo che l'utente possa comprendere la risposta.
+Domanda dell'utente:
+"{user_query}"
+
+Rispondi in modo sintetico, preciso e aderente al grafo e ai riferimenti del documento, in modo che l'utente possa comprendere la risposta.
 """
     task = regolo_call.delay(prompt)
     response = task.get(timeout=400)
@@ -675,6 +730,7 @@ def graphRAG_run_with_history(graph_context, user_query: str, conversation_histo
     """
     nodes_str = ", ".join(graph_context["nodes"])
     edges_str = "; ".join(graph_context["edges"])
+    qdrant_context = graph_context.get("qdrant_context", "")
     
     # Costruisci il contesto della conversazione se presente
     history_context = ""
@@ -685,7 +741,7 @@ def graphRAG_run_with_history(graph_context, user_query: str, conversation_histo
             content = msg.get("content", "")
             history_context += f"{role}: {content}\n"
         history_context += "\nUsa questo contesto per dare risposte più coerenti e contestuali. Se la domanda fa riferimento a qualcosa detto prima, usa quel contesto.\n"
-    
+    print(qdrant_context)
     prompt = f"""
 Sei un assistente che risponde usando SOLO il seguente grafo di conoscenza come contesto.
 {history_context}
@@ -695,10 +751,13 @@ NODI:
 ARCHI:
 {edges_str}
 
+RIFERIMENTI DAL DOCUMENTO:
+{qdrant_context}
+
 Domanda dell'utente:
 "{user_query}"
 
-Rispondi in modo sintetico, preciso e aderente al grafo, in modo che l'utente possa comprendere la risposta.
+Rispondi in modo sintetico, preciso e aderente al grafo e ai riferimenti del documento, in modo che l'utente possa comprendere la risposta.
 Se la domanda fa riferimento a qualcosa detto prima nella conversazione, usa quel contesto per dare una risposta più completa e coerente.
 """
     task = regolo_call.delay(prompt)
@@ -775,8 +834,9 @@ if __name__ == "__main__":
 
 
     print("Starting retriever search...")
-    retriever_result = retriever_search(neo4j_driver, qdrant_client, collection_name, query)
+    retriever_result, qdrant_texts = retriever_search(neo4j_driver, qdrant_client, collection_name, query)
     print("Retriever results:", retriever_result)
+    print("Qdrant texts found:", len(qdrant_texts))
     
     print("Extracting entity IDs...")
     entity_ids = []
@@ -791,13 +851,13 @@ if __name__ == "__main__":
     if not entity_ids:
         print("No entity IDs found. Stopping before subgraph/GraphRAG.")
         sys.exit(0)
-
+    
     print("Fetching related graph...")
     subgraph = fetch_related_graph(neo4j_driver, entity_ids)
     print("Subgraph:", subgraph)
     
     print("Formatting graph context...")
-    graph_context = format_graph_context(subgraph)
+    graph_context = format_graph_context(subgraph, qdrant_texts)
     print("Graph context:", graph_context)
     
     print("Running GraphRAG...")

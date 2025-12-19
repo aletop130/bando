@@ -91,7 +91,7 @@ def process_document(job_id: str, pdf_path: str, collection_name: str = "Bandi")
         clean_data = normalize_whitespace(raw_data)
         # 2. Chunking
         processing_status[job_id]["progress"] = "Creazione chunk..."
-        chunks = chunk_text(clean_data, max_words=800)
+        chunks = chunk_text(clean_data, max_words=150, overlap_words=25)
         
         if not chunks:
             processing_status[job_id] = {
@@ -187,13 +187,13 @@ async def query_document(request: QueryRequest):
     
     try:
         # 1. Retrieval
-        retriever_result = retriever_search(
+        retriever_result, qdrant_texts = retriever_search(
             neo4j_driver,
             qdrant_client,
             collection_name,
             request.query
         )
-        
+       
         # 2. Estrai entity IDs
         entity_ids = []
         for item in getattr(retriever_result, "items", []):
@@ -215,10 +215,10 @@ async def query_document(request: QueryRequest):
         # 3. Fetch subgraph
         subgraph = fetch_related_graph(neo4j_driver, entity_ids)
         
-        # 4. Format context
-        graph_context = format_graph_context(subgraph)
+        # 4. Format context (include qdrant_texts)
+        graph_context = format_graph_context(subgraph, qdrant_texts)
         
-        # 5. GraphRAG
+        # 5. GraphRAG (non serve più passare qdrant_context separato)
         answer = graphRAG_run(graph_context, request.query)
         
         return QueryResponse(
@@ -273,7 +273,7 @@ async def chat_with_document(request: ChatRequest):
             )
         
         # 1. Retrieval
-        retriever_result = retriever_search(
+        retriever_result, qdrant_texts = retriever_search(
             neo4j_driver,
             qdrant_client,
             collection_name,
@@ -303,8 +303,8 @@ async def chat_with_document(request: ChatRequest):
         # 3. Fetch subgraph
         subgraph = fetch_related_graph(neo4j_driver, entity_ids)
         
-        # 4. Format context
-        graph_context = format_graph_context(subgraph)
+        # 4. Format context (include qdrant_texts)
+        graph_context = format_graph_context(subgraph, qdrant_texts)
         
         # 5. GraphRAG con storia conversazionale
         answer = graphRAG_run_with_history(graph_context, user_query, conversation_history)
