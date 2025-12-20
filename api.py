@@ -7,28 +7,36 @@ import uuid
 import time
 from typing import Optional, List
 import asyncio
+import json
 
-# Import delle nuove funzioni con attributi dei nodi
+# Import della NUOVA pipeline con ontologia
 from graph_rag_pipeline import (
+    # FUNZIONI BASE
     extract_pdf_text_with_tables,
-    chunk_text,
-    build_graph_from_chunks,
-    ingest_to_neo4j,
-    ingest_to_qdrant,
-    create_collection,
-    # FUNZIONI AGGIORNATE
-    retriever_search,        # Ora restituisce 4 valori: (retriever_result, qdrant_texts, entity_ids, qdrant_node_mappings)
-    fetch_related_graph,     # Ora include attributi dei NODI
-    format_graph_context,    # Ora formatta attributi dei NODI
-    graphRAG_run,            # Prompt aggiornato per attributi nodi
-    graphRAG_run_with_history,  # Prompt aggiornato per attributi nodi
     normalize_whitespace,
+    chunk_text,
+    
+    # NUOVA PIPELINE ONTOLOGICA
+    extract_ontology_from_text,      # 1 chiamata LLM per tutto
+    create_ontology_graph,           # Crea grafo dall'ontologia
+    ingest_to_neo4j,                 # Ingestione Neo4j
+    
+    # QDRANT con collegamenti
+    create_collection,
+    ingest_to_qdrant,                # Versione con collegamenti ai nodi
+    
+    # RAG FUNCTIONS
+    retrieve_graph_context,          # Ricerca contesto dal grafo
+    graphRAG_run,                    # Query senza history
+    graphRAG_run_with_history,       # Query con history
+    
+    # CLIENTS
     neo4j_driver,
     qdrant_client,
     VECTOR_DIM,
 )
 
-app = FastAPI(title="GraphRAG Bandi API")
+app = FastAPI(title="GraphRAG Bandi API - Ontology Pipeline")
 
 # CORS per permettere chiamate dal frontend React
 app.add_middleware(
@@ -59,7 +67,6 @@ class UploadResponse(BaseModel):
 class QueryResponse(BaseModel):
     answer: str
     graph_context: Optional[dict] = None
-    # Aggiungiamo info su cosa è stato trovato
     entity_ids_found: Optional[List[str]] = None
     qdrant_texts_count: Optional[int] = None
 
@@ -69,6 +76,7 @@ class StatusResponse(BaseModel):
     status: str
     progress: Optional[str] = None
     error: Optional[str] = None
+    details: Optional[dict] = None
 
 
 class ChatMessage(BaseModel):
@@ -87,62 +95,108 @@ class ChatResponse(BaseModel):
     entity_ids_found: Optional[List[str]] = None
 
 
-def process_document(job_id: str, pdf_path: str, collection_name: str = "Bandi"):
-    """Processa il documento in background"""
+def process_document_ontology(job_id: str, pdf_path: str, collection_name: str = "Bandi"):
+    """NUOVA PIPELINE: Processa il documento usando ontologia (1 chiamata LLM)"""
     try:
         processing_status[job_id] = {"status": "processing", "progress": "Lettura PDF..."}
         
+        # 1. Estrazione testo
         processing_status[job_id]["progress"] = "Estrazione testo dal PDF..."
         raw_data = extract_pdf_text_with_tables(pdf_path)
         clean_data = normalize_whitespace(raw_data)
         
-        processing_status[job_id]["progress"] = "Creazione chunk..."
+        # 2. Estrazione ontologia (1 chiamata LLM)
+        processing_status[job_id]["progress"] = "Estrazione ontologia strutturata (1 chiamata LLM)..."
+        ontology = extract_ontology_from_text(clean_data)
+        ontology.file_name = os.path.basename(pdf_path)
+        
+        processing_status[job_id]["details"] = {
+            "identificativo": ontology.identificativo,
+            "dimensioni_ammesse": ontology.dimensioni_ammesse,
+            "tipologie_intervento": ontology.tipologie_intervento,
+            "criteri_count": len(ontology.criteri_selezione)
+        }
+        
+        # 3. Creazione grafo dall'ontologia
+        processing_status[job_id]["progress"] = "Creazione grafo ontologico..."
+        nodes, relationships, bando_attrs = create_ontology_graph(ontology)  # <-- Modifica qui: ora 3 valori
+        
+        # 4. Ingestione in Neo4j
+        processing_status[job_id]["progress"] = "Salvataggio in Neo4j..."
+        # Importa la nuova funzione se necessario, oppure modifica la firma
+        from graph_rag_pipeline import ingest_to_neo4j
+        
+        # Verifica se la funzione accetta bando_attrs come parametro
+        # Se non accetta, dovrai modificare la funzione nel modulo graph_rag_pipeline
+        try:
+            # Prova a chiamare con il nuovo parametro
+            ingest_to_neo4j(nodes, relationships, bando_attrs=bando_attrs)
+        except TypeError:
+            # Fallback: chiama senza bando_attrs (vecchia versione)
+            ingest_to_neo4j(nodes, relationships)
+            print("[WARNING] Usando vecchia versione di ingest_to_neo4j senza bando_attrs")
+        
+        # 5. Chunking del testo per Qdrant
+        processing_status[job_id]["progress"] = "Creazione chunk per ricerca semantica..."
         chunks = chunk_text(clean_data, max_words=250, overlap_words=35)
         
-        if not chunks:
-            processing_status[job_id] = {
-                "status": "error",
-                "error": "Nessun chunk estratto dal documento"
-            }
-            return
-        
-        processing_status[job_id]["progress"] = "Creazione collection Qdrant..."
+        # 6. Crea/verifica collection Qdrant
+        processing_status[job_id]["progress"] = "Configurazione Qdrant..."
         create_collection(qdrant_client, collection_name, VECTOR_DIM)
         
-        processing_status[job_id]["progress"] = "Estrazione grafo di conoscenza..."
-        nodes, relationships, chunk_node_mapping = build_graph_from_chunks(chunks)
+        # 7. Ingestione in Qdrant con collegamenti ai nodi Neo4j
+        processing_status[job_id]["progress"] = "Salvataggio in Qdrant con collegamenti al grafo..."
+        points_count = ingest_to_qdrant(
+            collection_name=collection_name,
+            chunks=chunks,
+            ontology=ontology,
+            nodes_dict=nodes
+        )
         
-        processing_status[job_id]["progress"] = "Salvataggio in Neo4j..."
-        ingest_to_neo4j(nodes, relationships)
-        
-        processing_status[job_id]["progress"] = "Salvataggio in Qdrant..."
-        ingest_to_qdrant(collection_name, chunks, chunk_node_mapping)
-        
+        # 8. Salva metadata
         processing_status[job_id] = {
             "status": "completed",
             "progress": "Completato!",
             "collection_name": collection_name,
             "chunks_count": len(chunks),
             "nodes_count": len(nodes),
-            "relationships_count": len(relationships)
+            "relationships_count": len(relationships),
+            "qdrant_points": points_count,
+            "ontology": {
+                "identificativo": ontology.identificativo,
+                "autorita": ontology.autorita,
+                "dotazione": ontology.dotazione_finanziaria,
+                "interventi": len(ontology.interventi),
+                "criteri": len(ontology.criteri_selezione)
+            },
+            "bando_attributes": bando_attrs  # <-- Aggiungi anche qui per debug
         }
+        
+        # Salva l'ontologia per riferimento
+        ontology_file = os.path.join(STORAGE_DIR, f"{job_id}_ontology.json")
+        with open(ontology_file, 'w') as f:
+            json.dump(ontology.dict(), f, indent=2, default=str)
         
     except Exception as e:
         import traceback
         error_msg = str(e)
-        traceback.print_exc()
+        traceback_str = traceback.format_exc()
+        print(f"[ERROR] Process failed: {error_msg}\n{traceback_str}")
+        
         processing_status[job_id] = {
             "status": "error",
-            "error": error_msg
+            "error": error_msg,
+            "traceback": traceback_str
         }
 
 
 @app.post("/upload", response_model=UploadResponse)
 async def upload_document(
     background_tasks: BackgroundTasks,
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    collection_name: str = "Bandi"
 ):
-    """Endpoint per caricare un documento PDF"""
+    """Endpoint per caricare un documento PDF con NUOVA pipeline"""
     if not file.filename.endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Solo file PDF sono supportati")
     
@@ -153,13 +207,23 @@ async def upload_document(
         content = await file.read()
         f.write(content)
     
-    processing_status[job_id] = {"status": "queued", "progress": "In coda..."}
+    processing_status[job_id] = {
+        "status": "queued", 
+        "progress": "In coda...",
+        "collection_name": collection_name
+    }
     
-    background_tasks.add_task(process_document, job_id, file_path)
+    # Usa la NUOVA pipeline ontologica
+    background_tasks.add_task(
+        process_document_ontology, 
+        job_id, 
+        file_path, 
+        collection_name
+    )
     
     return UploadResponse(
         job_id=job_id,
-        message=f"Documento caricato: {file.filename}",
+        message=f"Documento caricato: {file.filename} (pipeline ontologica)",
         status="queued"
     )
 
@@ -175,39 +239,33 @@ async def get_status(job_id: str):
         job_id=job_id,
         status=status.get("status", "unknown"),
         progress=status.get("progress"),
-        error=status.get("error")
+        error=status.get("error"),
+        details=status.get("details")
     )
 
 
 @app.post("/query", response_model=QueryResponse)
 async def query_document(request: QueryRequest):
-    """Endpoint per fare query sul documento processato"""
+    """NUOVA QUERY: Usa retrieve_graph_context invece di retriever_search"""
     collection_name = request.collection_name or "Bandi"
     
     try:
-        # 1. Retrieval - USIAMO LA NUOVA VERSIONE che restituisce 4 valori
-        retriever_result, qdrant_texts, entity_ids, qdrant_node_mappings = retriever_search(
-            neo4j_driver,
-            qdrant_client,
-            collection_name,
-            request.query
+        # 1. Recupera contesto usando la NUOVA funzione
+        entity_ids, qdrant_texts, graph_context = retrieve_graph_context(
+            query=request.query,
+            collection_name=collection_name,
+            top_k=5
         )
         
         if not entity_ids:
             return QueryResponse(
-                answer="Nessuna entità rilevante trovata per la tua query. Prova a riformulare la domanda.",
+                answer="Nessuna informazione rilevante trovata per la tua query. Prova a riformulare la domanda.",
                 graph_context=None,
                 entity_ids_found=[],
                 qdrant_texts_count=0
             )
         
-        # 2. Fetch subgraph - USIAMO LA NUOVA VERSIONE con attributi dei nodi
-        subgraph = fetch_related_graph(neo4j_driver, entity_ids)
-        
-        # 3. Format context - USIAMO LA NUOVA VERSIONE con attributi dei nodi
-        graph_context = format_graph_context(subgraph, qdrant_texts)
-        
-        # 4. GraphRAG - USIAMO LA NUOVA VERSIONE che sa gestire attributi dei nodi
+        # 2. GraphRAG (senza history)
         answer = graphRAG_run(graph_context, request.query)
         
         return QueryResponse(
@@ -225,10 +283,7 @@ async def query_document(request: QueryRequest):
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_with_document(request: ChatRequest):
-    """
-    Endpoint per chat con il documento processato.
-    Ora con supporto per attributi dei nodi nel grafo.
-    """
+    """NUOVA CHAT: Usa retrieve_graph_context invece di retriever_search"""
     collection_name = request.collection_name or "Bandi"
     
     if not request.messages:
@@ -261,12 +316,11 @@ async def chat_with_document(request: ChatRequest):
                 entity_ids_found=None
             )
         
-        # 1. Retrieval - NUOVA VERSIONE con 4 valori restituiti
-        retriever_result, qdrant_texts, entity_ids, qdrant_node_mappings = retriever_search(
-            neo4j_driver,
-            qdrant_client,
-            collection_name,
-            user_query
+        # 1. Recupera contesto usando la NUOVA funzione
+        entity_ids, qdrant_texts, graph_context = retrieve_graph_context(
+            query=user_query,
+            collection_name=collection_name,
+            top_k=5
         )
         
         if not entity_ids:
@@ -279,13 +333,7 @@ async def chat_with_document(request: ChatRequest):
                 entity_ids_found=[]
             )
         
-        # 2. Fetch subgraph - NUOVA VERSIONE con attributi dei nodi
-        subgraph = fetch_related_graph(neo4j_driver, entity_ids)
-        
-        # 3. Format context - NUOVA VERSIONE con attributi dei nodi
-        graph_context = format_graph_context(subgraph, qdrant_texts)
-        
-        # 4. GraphRAG con storia conversazionale - NUOVA VERSIONE che gestisce attributi nodi
+        # 2. GraphRAG con history
         answer = graphRAG_run_with_history(graph_context, user_query, conversation_history)
         
         return ChatResponse(
@@ -307,12 +355,31 @@ async def chat_with_document(request: ChatRequest):
 async def list_collections():
     """Endpoint per verificare quali collection sono disponibili"""
     try:
-        # Potremmo voler tenere traccia delle collection create
-        # Per ora restituiamo un messaggio generico
+        collections = qdrant_client.get_collections()
         return {
-            "message": "Usa il nome della collection usata durante l'upload",
+            "collections": [col.name for col in collections.collections],
             "default": "Bandi",
-            "note": "Il sistema supporta attributi dei nodi nel grafo di conoscenza"
+            "note": "Pipeline ontologica con collegamenti diretti tra chunk e nodi del grafo"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/ontology/{job_id}")
+async def get_ontology(job_id: str):
+    """Endpoint per recuperare l'ontologia estratta"""
+    ontology_file = os.path.join(STORAGE_DIR, f"{job_id}_ontology.json")
+    
+    if not os.path.exists(ontology_file):
+        raise HTTPException(status_code=404, detail="Ontologia non trovata")
+    
+    try:
+        with open(ontology_file, 'r') as f:
+            ontology_data = json.load(f)
+        
+        return {
+            "job_id": job_id,
+            "ontology": ontology_data
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -345,7 +412,8 @@ async def health_check():
             "neo4j": "healthy" if neo4j_healthy else "unhealthy",
             "qdrant": "healthy" if qdrant_healthy else "unhealthy",
             "api": "healthy",
-            "features": "graph_with_node_attributes"
+            "features": "ontology_pipeline",
+            "pipeline": "single_llm_call_ontology_extraction"
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -354,9 +422,18 @@ async def health_check():
 @app.get("/")
 async def root():
     return {
-        "message": "GraphRAG Bandi API con attributi dei nodi",
-        "version": "2.0",
-        "feature": "Graph con attributi dei nodi invece che delle relazioni"
+        "message": "GraphRAG Bandi API - Pipeline Ontologica",
+        "version": "3.0",
+        "feature": "Ontology extraction + Graph with node attributes + Qdrant-Neo4j linkage",
+        "endpoints": {
+            "POST /upload": "Carica PDF e processa con pipeline ontologica",
+            "GET /status/{job_id}": "Stato processing",
+            "POST /query": "Query singola sul bando",
+            "POST /chat": "Chat con memoria",
+            "GET /ontology/{job_id}": "Visualizza ontologia estratta",
+            "GET /collections": "Lista collections",
+            "GET /health": "Stato servizi"
+        }
     }
 
 

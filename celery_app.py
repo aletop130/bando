@@ -36,20 +36,22 @@ headers = {
     "Authorization": f"Bearer {REGOLO_KEY}",
 }
 
+# backend/celery_app.py - MODIFICA QUESTA FUNZIONE SOLO
 @celery_app.task(bind=True, max_retries=2)
-def regolo_call(self, prompt: str) -> str:
-    """Task che chiama Regolo con lo stesso schema che funziona nel tuo esempio."""
+def regolo_call(self, prompt: str, response_format: str = "text") -> str:
+    """Task che chiama Regolo con supporto per JSON mode"""
     data = {
         "model": REGOLO_MODEL,
-        "messages": [
-            {"role": "user", "content": prompt}
-        ],
-        "temperature": 0.3,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.1,  # Abbassato per consistenza
     }
-
-    print(f"[WORKER] Inizio chiamata Regolo (task_id={self.request.id})")
-    start = time.perf_counter()
-
+    
+    # Aggiungi JSON mode se richiesto
+    if response_format == "json":
+        data["response_format"] = {"type": "json_object"}
+    
+    print(f"[WORKER] Inizio chiamata Regolo (task_id={self.request.id}, format={response_format})")
+    
     try:
         resp = requests.post(
             REGOLO_API_URL,
@@ -57,41 +59,19 @@ def regolo_call(self, prompt: str) -> str:
             json=data,
             timeout=2000,
         )
-        elapsed = time.perf_counter() - start
-        print(f"[WORKER] Regolo risposta HTTP {resp.status_code} in {elapsed:.2f}s")
-
+        
         resp.raise_for_status()
-
-        # stesso parsing del codice che funziona
         response_json = resp.json()
-        content = (
-            response_json
-            .get("choices", [{}])[0]
-            .get("message", {})
-            .get("content", "")
-        )
-
-        if not content:
-            print("[WORKER][WARN] Nessun content in choices[0].message.content, uso raw text")
-            content = resp.text
-
-        print(f"[WORKER] Contenuto estratto ({len(content)} caratteri)")
-        return content
-
-    except requests.exceptions.Timeout:
-        elapsed = time.perf_counter() - start
-        print(f"[WORKER][TIMEOUT] dopo {elapsed:.2f}s (task_id={self.request.id})")
-        raise self.retry(exc=Exception("Timeout"), countdown=60)
-
-    except requests.exceptions.RequestException as e:
-        elapsed = time.perf_counter() - start
-        print(f"[WORKER][ERRORE HTTP] {e} dopo {elapsed:.2f}s (task_id={self.request.id})")
-        # logga anche il body per debugging
-        if e.response is not None:
-            print(f"[WORKER][ERRORE BODY] {e.response.text}")
-        raise self.retry(exc=e, countdown=30)
-
+        
+        # Gestione diversa per JSON mode vs text
+        if response_format == "json":
+            # Restituisci il JSON completo
+            return json.dumps(response_json)
+        else:
+            # Modalità testo normale
+            content = response_json.get("choices", [{}])[0].get("message", {}).get("content", "")
+            return content if content else resp.text
+            
     except Exception as e:
-        elapsed = time.perf_counter() - start
-        print(f"[WORKER][ERRORE GENERALE] {e} dopo {elapsed:.2f}s (task_id={self.request.id})")
-        raise
+        print(f"[WORKER][ERRORE] {e}")
+        raise self.retry(exc=e, countdown=30)
