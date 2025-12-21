@@ -6,7 +6,7 @@ load_dotenv()
 from celery import Celery
 import os
 import requests
-import time
+import json
 
 REGOLO_API_URL = "https://api.regolo.ai/v1/chat/completions"
 REGOLO_KEY = os.getenv("REGOLO_KEY")

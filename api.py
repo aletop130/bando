@@ -124,7 +124,6 @@ def process_document_ontology(job_id: str, pdf_path: str, collection_name: str =
         # 4. Ingestione in Neo4j
         processing_status[job_id]["progress"] = "Salvataggio in Neo4j..."
         # Importa la nuova funzione se necessario, oppure modifica la firma
-        from graph_rag_pipeline import ingest_to_neo4j
         
         # Verifica se la funzione accetta bando_attrs come parametro
         # Se non accetta, dovrai modificare la funzione nel modulo graph_rag_pipeline
