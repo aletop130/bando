@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+python-multipart
+pydantic
+python-dotenv
+PyMuPDF
+python-doctr
+torch
+torchvision
+qdrant-client
+neo4j
+sentence-transformers
+transformers
+numpy
+scikit-learn
+celery
+redis
