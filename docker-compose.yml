@@ -26,18 +26,6 @@ services:
     volumes:
       - redis_data:/data
 
-  celery-worker:
-      build:
-        context: .
-        dockerfile: dockerfile
-      container_name: celery-worker
-      depends_on:
-        - redis
-      environment:
-        - REDIS_URL=redis://redis:6379/0
-        - REGOLO_KEY=${REGOLO_KEY}
-      command: celery -A celery_app.celery_app worker -l info --concurrency=4
-
 
 volumes:
   neo4j_data:
