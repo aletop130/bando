@@ -1,7 +1,6 @@
 import os
 import re
-import sys
-import time, datetime
+import datetime
 import uuid
 import json
 from concurrent.futures import ThreadPoolExecutor
@@ -22,9 +21,6 @@ from celery import group
 from doctr.io import read_pdf
 from doctr.models import ocr_predictor
 
-# =========================
-# MODELLI PYDANTIC
-# =========================
 
 class GraphEntry(BaseModel):
     node: str
@@ -37,52 +33,54 @@ class GraphComponents(BaseModel):
     graph: list[GraphEntry]
 
 
+# Ontologia 
+
 class BandoOntology(BaseModel):
-    """Ontologia strutturata per un bando basata sulla tua analisi"""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    
+
     # A. Avviso
     identificativo: str
-    autorita: str  # "Regione Lazio"
-    soggetto_attuatore: Optional[str] = None  # "Lazio Innova"
-    dotazione_finanziaria: Optional[float] = None  # 15000000.0
-    regime_aiuto: Optional[str] = None  # "De Minimis"
+    autorita: str  
+    soggetto_attuatore: Optional[str] = None   
+    dotazione_finanziaria: Optional[float] = None  
+    regime_aiuto: Optional[str] = None 
     
     # Finestre temporali
-    data_apertura_formulario: Optional[str] = None  # "2025-10-16T12:00:00"
-    data_inizio_domande: Optional[str] = None  # "2025-10-24T12:00:00"
-    data_fine_domande: Optional[str] = None  # "2025-11-24T17:00:00"
+    data_apertura_formulario: Optional[str] = None 
+    data_inizio_domande: Optional[str] = None 
+    data_fine_domande: Optional[str] = None  
     
-    piattaforma_presentazione: Optional[str] = None  # "GeCoWEB Plus"
+    piattaforma_presentazione: Optional[str] = None 
     
     # B. Beneficiario
-    dimensioni_ammesse: List[str] = []  # ["Micro", "Piccola", "Media"]
-    requisiti_beneficiario: List[str] = []  # ["iscrizione RI", "sede Lazio", "DURC regolare"]
-    sede_obbligatoria: Optional[str] = None  # "Lazio"
+    dimensioni_ammesse: List[str] = []  
+    requisiti_beneficiario: List[str] = []  
+    sede_obbligatoria: Optional[str] = None 
     
     # Attributi bonus
-    attributi_bonus: List[str] = []  # ["impresa_giovanile", "certificazione_parita_genere", "certificazioni_sostenibilita"]
+    attributi_bonus: List[str] = []  
     
     # C. Progetto
-    tipologie_intervento: List[str] = []  # ["A", "B", "C", "D", "E"]
-    sottotipologie_cloud: List[str] = []  # ["D.1", "D.2", "D.3", "D.4"]
-    importo_minimo_progetto: Optional[float] = None  # 14000.0
-    tempo_realizzazione_mesi: Optional[int] = None  # 6
+    tipologie_intervento: List[str] = []  
+    sottotipologie_cloud: List[str] = []  
+    importo_minimo_progetto: Optional[float] = None  
+    tempo_realizzazione_mesi: Optional[int] = None  
     
     # Esclusioni specifiche
-    esclusioni: List[str] = []  # ["già beneficiari 2023/2024", "interventi identici già agevolati"]
+    esclusioni: List[str] = []  
     
     # D. Intervento (dettagli per tipologia)
-    interventi: List[dict] = []  # [{"tipo": "A", "nome": "Diagnosi Digitale", ...}]
+    interventi: List[dict] = []  
     
     # E. Contributo
-    natura_contributo: Optional[str] = None  # "fondo perduto"
-    importi_unitari: dict = {}  # {"A": {"Micro": 0, "Piccola": 8162.40, ...}}
-    massimali_dimensione: dict = {}  # {"Micro": 50000, "Piccola": 100000, "Media": 150000}
+    natura_contributo: Optional[str] = None  
+    importi_unitari: dict = {}  
+    massimali_dimensione: dict = {}  
     incompatibilita_aiuti: bool = False
     
     # F. Criteri di Selezione
-    criteri_selezione: List[dict] = []  # [{"codice": "C1", "nome": "valore_aggiunto_per_addetto", "max_punti": 35, ...}]
+    criteri_selezione: List[dict] = []  
     criterio_tiebreak: Optional[str] = None
     
     # G. Procedura Domanda
@@ -91,7 +89,7 @@ class BandoOntology(BaseModel):
     regola_senza_soccorso: bool = False
     
     # H. Istruttoria
-    ordine_istruttoria: Optional[str] = None  # "basato sul punteggio"
+    ordine_istruttoria: Optional[str] = None  
     
     # I. Erogazione
     modalita_erogazione: Optional[str] = None
@@ -104,26 +102,22 @@ class BandoOntology(BaseModel):
     file_name: Optional[str] = None
     pagine_totali: Optional[int] = None
     data_processing: str = Field(default_factory=lambda: datetime.now().isoformat())
-    fonte: Optional[str] = None  # "Allegato 1 all'atto G13041/10.10.2025"
+    fonte: Optional[str] = None  
 
-# =========================
-# ENV & CLIENTS
-# =========================
-
+#Env e Clients
 load_dotenv()
 
-qdrant_key = os.getenv("QDRANT_KEY")
 qdrant_url = os.getenv("QDRANT_URL")
+qdrant_client = QdrantClient(url=qdrant_url)   #Qdrant
+qdrant_key = os.getenv("QDRANT_KEY")           
+
+embedding_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")   # Modelli di embedding
+VECTOR_DIM = embedding_model.get_sentence_embedding_dimension() 
+
 neo4j_uri = os.getenv("NEO4J_URI")
-neo4j_username = os.getenv("NEO4J_USERNAME", "neo4j")
+neo4j_username = os.getenv("NEO4J_USERNAME", "neo4j")      #Neo4j
 neo4j_password = os.getenv("NEO4J_PASSWORD", "password")
-
 neo4j_driver = GraphDatabase.driver(neo4j_uri, auth=(neo4j_username, neo4j_password))
-qdrant_client = QdrantClient(url=qdrant_url)
-
-# Modelli di embedding
-embedding_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-VECTOR_DIM = embedding_model.get_sentence_embedding_dimension()
 
 # OCR per documenti scansionati
 doctr_ocr = ocr_predictor(
@@ -132,19 +126,15 @@ doctr_ocr = ocr_predictor(
     pretrained=True,
 )
 
-# =========================
-# FUNZIONI DI ESTRAZIONE PDF
-# =========================
-
 def is_scanned_page(page: fitz.Page, text_min_chars: int = 80) -> bool:
     """Ritorna True se la pagina sembra scansionata."""
-    text = page.get_text("text") or ""
+    text = page.get_text("text") or ""                                        
     has_images = len(page.get_images(full=True)) > 0
     return (len(text.strip()) < text_min_chars) and has_images
 
-def doctr_ocr_per_page(pdf_path: str) -> list[str]:
+def doctr_ocr_per_page(pdf_path: str) -> list[str]:               
     """Usa DocTR per fare OCR dell'intero PDF."""
-    doc = read_pdf(pdf_path)
+    doc = read_pdf(pdf_path)                                      #Flusso per scansionamento se serve
     result = doctr_ocr(doc)
     exported = result.export()
     page_texts: list[str] = []
@@ -160,7 +150,7 @@ def doctr_ocr_per_page(pdf_path: str) -> list[str]:
     return page_texts
 
 def extract_pdf_text_with_tables(pdf_path: str) -> str:
-    """Estrae testo da PDF con fallback OCR per pagine scansionate."""
+       #Estrae testo da PDF con fallback OCR per pagine scansionate
     doc = fitz.open(pdf_path)
     all_page_texts: list[str] = []
     
@@ -211,28 +201,82 @@ def normalize_whitespace(text: str) -> str:
     return text.strip()
 
 def chunk_text(text: str, max_words: int = 800, overlap_words: int = 80) -> list[str]:
-    """Chunking word-based con overlap."""
-    words = text.split()
-    n = len(words)
+    """Chunking basato su paragrafi con fallback word-based."""
+    # Separa il testo in paragrafi
+    paragraphs = text.split('\n')
     chunks: list[str] = []
+    current_chunk_words: list[str] = []
+    current_word_count = 0
     
-    if n == 0:
-        return chunks
+    for para in paragraphs:
+        if not para.strip():  # Salta paragrafi vuoti
+            continue
+            
+        para_words = para.split()
+        para_word_count = len(para_words)
+        
+        # Se il paragrafo da solo supera max_words, usiamo chunking word-based su di esso
+        if para_word_count > max_words:
+            # Prima aggiungiamo ciò che abbiamo accumulato finora
+            if current_chunk_words:
+                chunks.append(" ".join(current_chunk_words))
+                current_chunk_words = []
+                current_word_count = 0
+            
+            # Chunking word-based sul paragrafo lungo
+            words = para.split()
+            n = len(words)
+            start = 0
+            while start < n:
+                end = min(start + max_words, n)
+                chunk = " ".join(words[start:end])
+                chunks.append(chunk)
+                if end == n:
+                    break
+                start = end - overlap_words
+            continue
+        
+        # Se aggiungendo questo paragrafo superiamo il limite
+        if current_word_count + para_word_count > max_words:
+            if current_chunk_words:  # Aggiungi il chunk corrente
+                chunks.append(" ".join(current_chunk_words))
+                
+                # Prepara il prossimo chunk con overlap
+                if overlap_words > 0:
+                    # Prendi le ultime overlap_words parole dal chunk corrente
+                    overlap_start = max(0, len(current_chunk_words) - overlap_words)
+                    current_chunk_words = current_chunk_words[overlap_start:]
+                    current_word_count = len(current_chunk_words)
+                else:
+                    current_chunk_words = []
+                    current_word_count = 0
+        
+        # Aggiungi il paragrafo al chunk corrente
+        if current_chunk_words:
+            current_chunk_words.append(para)
+        else:
+            current_chunk_words = [para]
+        current_word_count += para_word_count
     
-    start = 0
-    while start < n:
-        end = min(start + max_words, n)
-        chunk = " ".join(words[start:end])
-        chunks.append(chunk)
-        if end == n:
-            break
-        start = end - overlap_words
+    # Aggiungi l'ultimo chunk se non è vuoto
+    if current_chunk_words:
+        chunks.append(" ".join(current_chunk_words))
+    
+    # Se non siamo riusciti a fare chunking per paragrafi (testo senza newline),
+    # usiamo il metodo word-based originale
+    if not chunks and text.strip():
+        words = text.split()
+        n = len(words)
+        start = 0
+        while start < n:
+            end = min(start + max_words, n)
+            chunk = " ".join(words[start:end])
+            chunks.append(chunk)
+            if end == n:
+                break
+            start = end - overlap_words
     
     return chunks
-
-# =========================
-# PROMPT PER ONTOLOGIA COMPLETA
-# =========================
 
 def build_ontology_prompt_complete(full_text: str) -> str:
     """Crea il prompt per estrarre l'ontologia completa dal documento."""
@@ -338,9 +382,7 @@ def extract_ontology_from_text(full_text: str) -> BandoOntology:
         print(f"[ERROR] JSON ricevuto: {json_str[:1000]}")
         raise
 
-# =========================
-# CREAZIONE GRAFO ONTOLOGICO
-# =========================
+#Creazione Neo4j Graph
 
 def create_ontology_graph(ontology: BandoOntology) -> Tuple[Dict[str, str], List[Dict], Dict]:
     """
@@ -522,9 +564,7 @@ def create_ontology_graph(ontology: BandoOntology) -> Tuple[Dict[str, str], List
     print(f"[ONTOLOGY GRAPH] Creati {len(nodes)} nodi e {len(relationships)} relazioni")
     return nodes, relationships, bando_attrs
 
-# =========================
-# INGESTIONE IN NEO4J
-# =========================
+#Neo4j Ingestion
 
 def ingest_to_neo4j(nodes: Dict[str, str], relationships: List[Dict], driver=None, bando_attrs: Dict = None) -> Dict[str, str]:
     """
@@ -607,9 +647,7 @@ def ingest_to_neo4j(nodes: Dict[str, str], relationships: List[Dict], driver=Non
     print(f"[NEO4J] Ingestiti {len(nodes)} nodi e {len(relationships)} relazioni")
     return nodes
 
-# =========================
-# INGESTIONE IN QDRANT CON COLLEGAMENTI AL GRAFO
-# =========================
+#Ingestion su qdrant con collegamenti ID
 
 def create_collection(client, collection_name: str, vector_dimension: int):
     """Crea la collection Qdrant solo se non esiste."""
@@ -763,9 +801,7 @@ def retrieve_graph_context(
     return entity_ids, qdrant_texts, graph_context
 
 
-# =========================
-# GRAPH CONTEXT & QA CON REGOLO
-# =========================
+#Graph Query
 
 def fetch_related_graph(neo4j_client, entity_ids: List[str]) -> List[Dict]:
     """
@@ -927,50 +963,6 @@ def format_graph_context(subgraph: List[Dict], qdrant_texts: List[str]) -> Dict:
         "nodes_info": nodes_info,
         "edges_info": edges_info
     }
-
-def graphRAG_run(graph_context, user_query: str) -> str:
-    """Versione base senza history"""
-    nodes_str = "\n".join(graph_context["nodes"])
-    
-    # Correzione anche qui
-    edges_info = graph_context.get("edges", [])
-    edges_list = []
-    
-    for edge in edges_info:
-        edge_str = f"{edge.get('from', '?')} --[{edge.get('type', '?')}]--> {edge.get('to', '?')}"
-        attrs = edge.get('attributes', {})
-        if attrs:
-            attrs_str = ", ".join([f"{k}: {v}" for k, v in attrs.items()])
-            edge_str += f" ({attrs_str})"
-        edges_list.append(edge_str)
-    
-    edges_str = "; ".join(edges_list)
-    
-    qdrant_context = graph_context.get("qdrant_context", "")
-    
-    prompt = f"""
-Sei un assistente che risponde usando SOLO il seguente grafo di conoscenza come contesto.
-
-NODI (ogni nodo ha i suoi attributi elencati sotto):
-{nodes_str}
-
-ARCHI (relazioni tra nodi):
-{edges_str}
-
-RIFERIMENTI DAL DOCUMENTO:
-{qdrant_context}
-
-Domanda dell'utente:
-"{user_query}"
-
-Analizza attentamente gli attributi dei nodi e le relazioni tra di essi.
-Rispondi in modo sintetico, preciso e aderente al grafo, CITANDO ESPLICITAMENTE GLI ATTRIBUTI DEI NODI quando rilevanti per la risposta.
-"""
-    task = regolo_call.delay(prompt)
-    response = task.get(timeout=400)
-    
-    return response
-
 
 def graphRAG_run_with_history(graph_context, user_query: str, conversation_history: Optional[List[dict]] = None) -> str:
     """

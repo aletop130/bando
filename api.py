@@ -1,57 +1,33 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
 import os
 import uuid
-import time
-from typing import Optional, List
-import asyncio
 import json
+from typing import Optional, List
+from pydantic import BaseModel
+from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
 
-# Import della NUOVA pipeline con ontologia
 from graph_rag_pipeline import (
-    # FUNZIONI BASE
+    
     extract_pdf_text_with_tables,
-    normalize_whitespace,
+    normalize_whitespace,         # Estrazione testo da pdf
     chunk_text,
     
-    # NUOVA PIPELINE ONTOLOGICA
-    extract_ontology_from_text,      # 1 chiamata LLM per tutto
-    create_ontology_graph,           # Crea grafo dall'ontologia
-    ingest_to_neo4j,                 # Ingestione Neo4j
+    extract_ontology_from_text,   
+    create_ontology_graph,        # Ontologia e Neo4j Ingestion  
+    ingest_to_neo4j,                 
     
-    # QDRANT con collegamenti
     create_collection,
-    ingest_to_qdrant,                # Versione con collegamenti ai nodi
+    ingest_to_qdrant,             # Chunking e Qdrant Ingestion
     
-    # RAG FUNCTIONS
-    retrieve_graph_context,          # Ricerca contesto dal grafo
-    graphRAG_run,                    # Query senza history
-    graphRAG_run_with_history,       # Query con history
+    retrieve_graph_context,       #GraphRAG
+    graphRAG_run_with_history,       
     
-    # CLIENTS
     neo4j_driver,
-    qdrant_client,
+    qdrant_client,                #Clients
     VECTOR_DIM,
 )
 
-app = FastAPI(title="GraphRAG Bandi API - Ontology Pipeline")
-
-# CORS per permettere chiamate dal frontend React
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-STORAGE_DIR = "uploads"
-os.makedirs(STORAGE_DIR, exist_ok=True)
-
-processing_status = {}
-
+# Classi
 
 class QueryRequest(BaseModel):
     query: str
@@ -95,6 +71,24 @@ class ChatResponse(BaseModel):
     entity_ids_found: Optional[List[str]] = None
 
 
+# Inizializzazione Fast API e React Frontend
+
+app = FastAPI(title="GraphRAG Bandi API - Ontology Pipeline")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+STORAGE_DIR = "uploads"
+os.makedirs(STORAGE_DIR, exist_ok=True)
+
+processing_status = {}
+
+
 def process_document_ontology(job_id: str, pdf_path: str, collection_name: str = "Bandi"):
     """NUOVA PIPELINE: Processa il documento usando ontologia (1 chiamata LLM)"""
     try:
@@ -119,22 +113,13 @@ def process_document_ontology(job_id: str, pdf_path: str, collection_name: str =
         
         # 3. Creazione grafo dall'ontologia
         processing_status[job_id]["progress"] = "Creazione grafo ontologico..."
-        nodes, relationships, bando_attrs = create_ontology_graph(ontology)  # <-- Modifica qui: ora 3 valori
+        nodes, relationships, bando_attrs = create_ontology_graph(ontology) 
         
-        # 4. Ingestione in Neo4j
+        # 4. Ingestion in Neo4j
         processing_status[job_id]["progress"] = "Salvataggio in Neo4j..."
-        # Importa la nuova funzione se necessario, oppure modifica la firma
-        
-        # Verifica se la funzione accetta bando_attrs come parametro
-        # Se non accetta, dovrai modificare la funzione nel modulo graph_rag_pipeline
-        try:
-            # Prova a chiamare con il nuovo parametro
-            ingest_to_neo4j(nodes, relationships, bando_attrs=bando_attrs)
-        except TypeError:
-            # Fallback: chiama senza bando_attrs (vecchia versione)
-            ingest_to_neo4j(nodes, relationships)
-            print("[WARNING] Usando vecchia versione di ingest_to_neo4j senza bando_attrs")
-        
+
+        ingest_to_neo4j(nodes, relationships, bando_attrs=bando_attrs)
+
         # 5. Chunking del testo per Qdrant
         processing_status[job_id]["progress"] = "Creazione chunk per ricerca semantica..."
         chunks = chunk_text(clean_data, max_words=250, overlap_words=35)
@@ -168,13 +153,13 @@ def process_document_ontology(job_id: str, pdf_path: str, collection_name: str =
                 "interventi": len(ontology.interventi),
                 "criteri": len(ontology.criteri_selezione)
             },
-            "bando_attributes": bando_attrs  # <-- Aggiungi anche qui per debug
+            "bando_attributes": bando_attrs  
         }
         
         # Salva l'ontologia per riferimento
         ontology_file = os.path.join(STORAGE_DIR, f"{job_id}_ontology.json")
         with open(ontology_file, 'w') as f:
-            json.dump(ontology.dict(), f, indent=2, default=str)
+            json.dump(ontology.model_dump_json(), f, indent=2, default=str)
         
     except Exception as e:
         import traceback
@@ -195,7 +180,8 @@ async def upload_document(
     file: UploadFile = File(...),
     collection_name: str = "Bandi"
 ):
-    """Endpoint per caricare un documento PDF con NUOVA pipeline"""
+    #Endpoint per caricare un documento PDF con NUOVA pipeline
+
     if not file.filename.endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Solo file PDF sono supportati")
     
@@ -212,7 +198,8 @@ async def upload_document(
         "collection_name": collection_name
     }
     
-    # Usa la NUOVA pipeline ontologica
+    #Ontology Pipelineù
+
     background_tasks.add_task(
         process_document_ontology, 
         job_id, 
@@ -243,46 +230,11 @@ async def get_status(job_id: str):
     )
 
 
-@app.post("/query", response_model=QueryResponse)
-async def query_document(request: QueryRequest):
-    """NUOVA QUERY: Usa retrieve_graph_context invece di retriever_search"""
-    collection_name = request.collection_name or "Bandi"
-    
-    try:
-        # 1. Recupera contesto usando la NUOVA funzione
-        entity_ids, qdrant_texts, graph_context = retrieve_graph_context(
-            query=request.query,
-            collection_name=collection_name,
-            top_k=5
-        )
-        
-        if not entity_ids:
-            return QueryResponse(
-                answer="Nessuna informazione rilevante trovata per la tua query. Prova a riformulare la domanda.",
-                graph_context=None,
-                entity_ids_found=[],
-                qdrant_texts_count=0
-            )
-        
-        # 2. GraphRAG (senza history)
-        answer = graphRAG_run(graph_context, request.query)
-        
-        return QueryResponse(
-            answer=answer,
-            graph_context=graph_context,
-            entity_ids_found=entity_ids,
-            qdrant_texts_count=len(qdrant_texts)
-        )
-        
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Errore durante la query: {str(e)}")
-
-
 @app.post("/chat", response_model=ChatResponse)
+
+#Chat con message history
+
 async def chat_with_document(request: ChatRequest):
-    """NUOVA CHAT: Usa retrieve_graph_context invece di retriever_search"""
     collection_name = request.collection_name or "Bandi"
     
     if not request.messages:

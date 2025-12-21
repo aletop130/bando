@@ -77,10 +77,9 @@ function App() {
         if (newStatus.status === 'completed') {
           clearInterval(interval)
           setUploading(false)
-          // Aggiungi un messaggio di benvenuto quando il documento è pronto
           setMessages([{
             role: 'assistant',
-            content: `✅ Documento processato con successo! Ho analizzato ${newStatus.chunks_count || 'N/A'} sezioni. Puoi iniziare a farmi domande sul bando.`
+            content: `✅ Documento processato con successo! Ho analizzato ${newStatus.chunks_count || 'N/A'} sezioni. Ora puoi farmi domande sul bando.`
           }])
           setChatStarted(true)
         } else if (newStatus.status === 'error') {
@@ -93,7 +92,7 @@ function App() {
         clearInterval(interval)
         setUploading(false)
       }
-    }, 2000) // Poll ogni 2 secondi
+    }, 2000)
   }
 
   const handleSendMessage = async (): Promise<void> => {
@@ -104,13 +103,11 @@ function App() {
       content: inputMessage.trim()
     }
 
-    // Aggiungi il messaggio dell'utente
     setMessages(prev => [...prev, userMessage])
     setInputMessage('')
     setLoadingAnswer(true)
 
     try {
-      // Prepara tutti i messaggi per il contesto conversazionale
       const allMessages: ChatMessage[] = [...messages, userMessage]
 
       const request: ChatRequest = {
@@ -120,7 +117,6 @@ function App() {
 
       const response = await axios.post<ChatResponse>(`${API_BASE}/chat`, request)
 
-      // Aggiungi la risposta dell'assistente
       setMessages(prev => [...prev, response.data.message])
     } catch (error) {
       console.error('Errore chat:', error)
@@ -129,7 +125,7 @@ function App() {
         : 'Errore sconosciuto'
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: '❌ Errore durante l\'elaborazione della domanda: ' + errorMessage
+        content: '❌ Errore durante l\'elaborazione: ' + errorMessage
       }])
     } finally {
       setLoadingAnswer(false)
@@ -155,113 +151,190 @@ function App() {
   return (
     <div className="app">
       <div className="container">
-        <h1>📄 GraphRAG Bandi Chat</h1>
-        <p className="subtitle">Carica un bando o chatta con quelli già processati</p>
-
-        {/* Upload Section - Opzionale */}
-        <div className="card">
-          <h2>Carica Nuovo Documento (Opzionale)</h2>
-          <div className="upload-section">
-            <input
-              type="file"
-              accept=".pdf"
-              onChange={handleFileChange}
-              disabled={uploading}
-              className="file-input"
-            />
-            <button
-              onClick={handleUpload}
-              disabled={uploading || !file}
-              className="btn btn-primary"
-            >
-              {uploading ? 'Caricamento...' : 'Carica PDF'}
-            </button>
-            {chatStarted && (
-              <button
-                onClick={startNewChat}
-                className="btn btn-secondary"
-              >
-                Nuovo Documento
-              </button>
-            )}
+        <header className="header">
+          <div className="header-content">
+            <h1>📄 GraphRAG Bandi Chat</h1>
+            <p className="subtitle">Carica un bando PDF e chatta con l'AI per ottenere informazioni specifiche</p>
           </div>
+        </header>
 
-          {jobId && (
-            <div className="status-section">
-              <p><strong>Job ID:</strong> {jobId}</p>
-              <p><strong>Stato:</strong> 
-                <span className={`status-badge status-${status || ''}`}>
-                  {status === 'queued' && '⏳ In coda'}
-                  {status === 'processing' && '⚙️ Elaborazione...'}
-                  {status === 'completed' && '✅ Completato'}
-                  {status === 'error' && '❌ Errore'}
-                </span>
-              </p>
+        <main className="main-content">
+          {/* Upload Section */}
+          <section className="upload-card card">
+            <div className="card-header">
+              <h2>📤 Carica Nuovo Documento</h2>
+              <span className="card-subtitle">(Opzionale - puoi anche chattare con documenti esistenti)</span>
             </div>
-          )}
-        </div>
+            <div className="upload-section">
+              <div className="file-input-container">
+                <label className="file-input-label">
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={handleFileChange}
+                    disabled={uploading}
+                    className="file-input"
+                  />
+                  <span className="file-input-custom">
+                    {file ? file.name : 'Scegli file PDF...'}
+                  </span>
+                </label>
+                <div className="upload-buttons">
+                  <button
+                    onClick={handleUpload}
+                    disabled={uploading || !file}
+                    className="btn btn-primary"
+                  >
+                    {uploading ? (
+                      <>
+                        <span className="spinner"></span>
+                        Caricamento...
+                      </>
+                    ) : 'Carica PDF'}
+                  </button>
+                  {chatStarted && (
+                    <button
+                      onClick={startNewChat}
+                      className="btn btn-secondary"
+                    >
+                      Nuovo Documento
+                    </button>
+                  )}
+                </div>
+              </div>
 
-        {/* Chat Section - Sempre visibile */}
-        <div className="card chat-card">
-          <h2>Chat</h2>
-          
-          {status === 'processing' && (
-            <p style={{ padding: '10px', backgroundColor: '#fff3cd', borderRadius: '5px', marginBottom: '15px' }}>
-              ⚙️ Documento in elaborazione... Puoi comunque chattare con i documenti già processati.
-            </p>
-          )}
-          
-          {status === null && messages.length === 0 && (
-            <p style={{ padding: '10px', backgroundColor: '#d1ecf1', borderRadius: '5px', marginBottom: '15px' }}>
-              💡 Carica un nuovo documento per processarlo, oppure chatta con i documenti già presenti nel sistema.
-            </p>
-          )}
-          
-          <div className="chat-messages">
-              {messages.map((msg, idx) => (
-                <div key={idx} className={`message ${msg.role}`}>
-                  <div className="message-avatar">
-                    {msg.role === 'user' ? '👤' : '🤖'}
+              {jobId && (
+                <div className="status-section">
+                  <div className="status-header">
+                    <h3>Stato Elaborazione</h3>
+                    <div className={`status-indicator status-${status || ''}`}>
+                      {status === 'queued' && '⏳ In coda'}
+                      {status === 'processing' && '⚙️ Elaborazione...'}
+                      {status === 'completed' && '✅ Completato'}
+                      {status === 'error' && '❌ Errore'}
+                    </div>
                   </div>
-                  <div className="message-content">
-                    {msg.content}
+                  <div className="status-details">
+                    <p><strong>ID Processo:</strong> <code>{jobId}</code></p>
+                    {status === 'completed' && (
+                      <div className="status-completed-info">
+                        <span>✅ Pronto per le domande</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              ))}
-              {loadingAnswer && (
-                <div className="message assistant">
-                  <div className="message-avatar">🤖</div>
-                  <div className="message-content">
-                    <div className="typing-indicator">
-                      <span></span>
-                      <span></span>
-                      <span></span>
+              )}
+            </div>
+          </section>
+
+          {/* Chat Section */}
+          <section className="chat-card card">
+            <div className="card-header">
+              <h2>💬 Chat con il Bando</h2>
+              <div className="chat-stats">
+                {messages.length > 0 && (
+                  <span className="message-count">{messages.length} messaggi</span>
+                )}
+              </div>
+            </div>
+
+            <div className="chat-container">
+              {status === 'processing' && (
+                <div className="processing-notice">
+                  <div className="notice-content">
+                    <span className="notice-icon">⚙️</span>
+                    <div>
+                      <strong>Documento in elaborazione...</strong>
+                      <p>Puoi comunque chattare con i documenti già processati nel sistema.</p>
                     </div>
                   </div>
                 </div>
               )}
-              <div ref={messagesEndRef} />
-          </div>
+              
+              {status === null && messages.length === 0 && (
+                <div className="welcome-notice">
+                  <div className="notice-content">
+                    <span className="notice-icon">💡</span>
+                    <div>
+                      <strong>Benvenuto in GraphRAG Bandi Chat!</strong>
+                      <p>Carica un documento PDF per iniziare una nuova conversazione, oppure fai direttamente una domanda sui documenti già presenti nel sistema.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="chat-messages">
+                {messages.map((msg, idx) => (
+                  <div key={idx} className={`message ${msg.role}`}>
+                    <div className="message-header">
+                      <div className="message-avatar">
+                        {msg.role === 'user' ? '👤' : '🤖'}
+                      </div>
+                      <span className="message-role">
+                        {msg.role === 'user' ? 'Tu' : 'Assistente'}
+                      </span>
+                    </div>
+                    <div className="message-content">
+                      {msg.content}
+                    </div>
+                    <div className="message-time">
+                      {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                ))}
+                {loadingAnswer && (
+                  <div className="message assistant">
+                    <div className="message-header">
+                      <div className="message-avatar">🤖</div>
+                      <span className="message-role">Assistente</span>
+                    </div>
+                    <div className="message-content">
+                      <div className="typing-indicator">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
 
-          <div className="chat-input-section">
-            <textarea
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyDown={handleKeyPress}
-              placeholder="Fai una domanda sul bando... (Premi Invio per inviare, Shift+Invio per andare a capo)"
-              className="chat-input"
-              rows={2}
-              disabled={loadingAnswer}
-            />
-            <button
-              onClick={handleSendMessage}
-              disabled={loadingAnswer || !inputMessage.trim()}
-              className="btn btn-secondary send-btn"
-            >
-              {loadingAnswer ? '⏳' : '📤'}
-            </button>
-          </div>
-        </div>
+              <div className="chat-input-container">
+                <div className="input-wrapper">
+                  <textarea
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    placeholder="Scrivi la tua domanda sul bando... (Premi Invio per inviare, Shift+Invio per andare a capo)"
+                    className="chat-input"
+                    rows={2}
+                    disabled={loadingAnswer}
+                  />
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={loadingAnswer || !inputMessage.trim()}
+                    className="send-button"
+                    aria-label="Invia messaggio"
+                  >
+                    {loadingAnswer ? (
+                      <span className="sending-icon">⏳</span>
+                    ) : (
+                      <span className="send-icon">📤</span>
+                    )}
+                  </button>
+                </div>
+                <div className="input-hint">
+                  <span>GraphRAG analizzerà il documento e risponderà alle tue domande</span>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        <footer className="footer">
+          <p>GraphRAG Bandi Chat v1.0 • Analisi documenti con AI avanzata</p>
+        </footer>
       </div>
     </div>
   )
