@@ -268,7 +268,7 @@ async def chat_with_document(request: ChatRequest):
             )
         
         #Recupero contesto
-        entity_ids, graph_context = retrieve_graph_context(
+        entity_ids, qdrant_texts, graph_context = retrieve_graph_context(
             query=user_query,
             collection_name=collection_name,
             top_k=5
@@ -334,41 +334,6 @@ async def get_ontology(job_id: str):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/health")
-async def health_check():
-    """Endpoint per verificare lo stato dei servizi"""
-    try:
-        neo4j_healthy = False
-        qdrant_healthy = False
-        
-        # Verifica Neo4j
-        try:
-            with neo4j_driver.session() as session:
-                result = session.run("RETURN 1 as test")
-                if result.single()["test"] == 1:
-                    neo4j_healthy = True
-        except:
-            pass
-        
-        # Verifica Qdrant
-        try:
-            collections = qdrant_client.get_collections()
-            qdrant_healthy = True
-        except:
-            pass
-        
-        return {
-            "neo4j": "healthy" if neo4j_healthy else "unhealthy",
-            "qdrant": "healthy" if qdrant_healthy else "unhealthy",
-            "api": "healthy",
-            "features": "ontology_pipeline",
-            "pipeline": "single_llm_call_ontology_extraction"
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 
 @app.get("/")
 async def root():
