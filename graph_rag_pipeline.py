@@ -3,7 +3,7 @@ import re
 import datetime
 import uuid
 import json
-from concurrent.futures import ThreadPoolExecutor
+import hashlib
 from typing import List, Optional, Any, Dict, Tuple
 from datetime import datetime
 
@@ -14,7 +14,6 @@ from pydantic import BaseModel, Field
 from sentence_transformers import SentenceTransformer
 
 from qdrant_client import QdrantClient, models
-from neo4j_graphrag.retrievers import QdrantNeo4jRetriever
 from celery_app import regolo_call
 from celery import group
 
@@ -46,6 +45,9 @@ class BandoOntology(BaseModel):
     dotazione_finanziaria: Optional[float] = None  
     regime_aiuto: Optional[str] = None 
     
+    #Macro_area
+    macro_area: Optional[str] = None
+
     # Finestre temporali
     data_apertura_formulario: Optional[str] = None 
     data_inizio_domande: Optional[str] = None 
@@ -290,16 +292,31 @@ Analizza il seguente bando e estrai TUTTE le informazioni strutturate seguendo l
 3. Per gli importi, rimuovi '€' e converti in numero float: "€ 15.000.000" → 15000000.0
 4. Per le liste, includi tutti gli elementi rilevanti trovati nel testo.
 5. Se un campo non è presente, lascia null o lista vuota.
-6. Raccogli TUTTI i dettagli strutturati, inclusi:
-   - Tutti i criteri di selezione (C1-C7)
-   - Tutti gli importi per ogni tipologia di intervento
-   - Tutti i requisiti del beneficiario
-   - Tutti gli interventi con le loro descrizioni
+6. **IMPORTANTE PER MACROAREA:**
+   - Identifica la categoria principale del bando tra queste opzioni standardizzate:
+     - "Digitalizzazione e Innovazione"
+     - "Transizione Ecologica e Green"
+     - "Industria 4.0 e Manifattura"
+     - "Turismo e Cultura"
+     - "Agricoltura e Agroalimentare"
+     - "Salute e Benessere"
+     - "Formazione e Capitale Umano"
+     - "Infrastrutture e Mobilità"
+     - "Internazionalizzazione"
+     - "Ricerca e Sviluppo"
+   - Se nessuna corrisponde esattamente, scegli la più vicina
+   - Sii CONSISTENTE: bandi simili devono avere la stessa macroarea
+
+7. **IMPORTANTE PER SEDE OBBLIGATORIA:**
+    -ES: Se la sede è nella Regione Lazio, scrivere solo Lazio, senza altro.
+    -NEL CASO SI INDICHI UNO STATO SI RIPORTI IL NOME DELLO STATO:
+    Italia, NON SEDE NELLO STATO ITALIANO
 
 **STRUTTURA JSON OBBLIGATORIA:**
 {{
   "identificativo": "string (es. 'Voucher Digitalizzazione PMI – II Edizione 2025')",
   "autorita": "string (es. 'Regione Lazio')",
+  "macro_area": "string | null (es. 'Digitalizzazione e Innovazione')",  
   "soggetto_attuatore": "string | null (es. 'Lazio Innova')",
   "dotazione_finanziaria": "number | null",
   "regime_aiuto": "string | null (es. 'De Minimis')",
@@ -387,12 +404,7 @@ def extract_ontology_from_text(full_text: str) -> BandoOntology:
 def create_ontology_graph(ontology: BandoOntology) -> Tuple[Dict[str, str], List[Dict], Dict]:
     """
     Crea un grafo strutturato dall'ontologia del bando.
-    
-    Returns:
-        Tuple[nodes_dict, relationships_list, bando_attrs_dict]
-        nodes_dict: mappatura nome_nodo -> id_univoco
-        relationships_list: lista di relazioni con source, target, type, attributes
-        bando_attrs_dict: attributi del nodo bando principale
+    MODIFICA: MacroArea e Localizzazione diventano nodi UNICI
     """
     nodes: Dict[str, str] = {}
     relationships: List[Dict] = []
@@ -402,7 +414,7 @@ def create_ontology_graph(ontology: BandoOntology) -> Tuple[Dict[str, str], List
     bando_name = f"BANDO: {ontology.identificativo}"
     nodes[bando_name] = bando_id
     
-    # Attributi del bando come proprietà del nodo
+    # Attributi del bando (SENZA macro_area come attributo - sarà nodo separato)
     bando_attrs = {
         "identificativo": ontology.identificativo,
         "autorita": ontology.autorita,
@@ -412,12 +424,48 @@ def create_ontology_graph(ontology: BandoOntology) -> Tuple[Dict[str, str], List
         "piattaforma_presentazione": ontology.piattaforma_presentazione,
         "importo_minimo_progetto": ontology.importo_minimo_progetto,
         "tempo_realizzazione_mesi": ontology.tempo_realizzazione_mesi,
-        "file_name": ontology.file_name
+        "file_name": ontology.file_name,
+        # NOTA: macro_area NON è qui come attributo, sarà nodo separato
     }
-    # Filtra None
     bando_attrs = {k: v for k, v in bando_attrs.items() if v is not None}
     
-    # 2. NODI PER DIMENSIONI AMMESSE
+    # 2. NODO MACROAREA (UNICO - stesso ID per tutti i bandi della stessa area)
+    if ontology.macro_area:
+        # ID UNIVOCO per questa macroarea (usa hash per consistenza)
+        macro_hash = hashlib.md5(f"MACROAREA:{ontology.macro_area}".encode()).hexdigest()[:8]
+        macro_id = f"MACRO_{macro_hash}"
+        macro_name = f"MACROAREA: {ontology.macro_area}"
+        
+        # Se non esiste già nel dizionario, aggiungi
+        if macro_name not in nodes:
+            nodes[macro_name] = macro_id
+        
+        relationships.append({
+            "source": bando_id,
+            "target": macro_id,
+            "type": "APPARTIENE_A",
+            "attributes": {"macro_area": ontology.macro_area}
+        })
+    
+    # 3. NODO LOCALIZZAZIONE (UNICO - stesso ID per tutti i bandi della stessa area)
+    if ontology.sede_obbligatoria:
+        # ID UNIVOCO per questa localizzazione
+        loc_hash = hashlib.md5(f"LOCALIZZAZIONE:{ontology.sede_obbligatoria}".encode()).hexdigest()[:8]
+        loc_id = f"LOC_{loc_hash}"
+        loc_name = f"LOCALIZZAZIONE: {ontology.sede_obbligatoria}"
+        
+        # Se non esiste già nel dizionario, aggiungi
+        if loc_name not in nodes:
+            nodes[loc_name] = loc_id
+        
+        relationships.append({
+            "source": bando_id,
+            "target": loc_id,
+            "type": "LIMITATO_A",
+            "attributes": {"area": ontology.sede_obbligatoria}
+        })
+    
+    # 4. NODI PER DIMENSIONI AMMESSE (questi possono rimanere duplicati se necessario)
     for dim in ontology.dimensioni_ammesse:
         dim_name = f"DIMENSIONE: {dim}"
         dim_id = str(uuid.uuid4())
@@ -429,7 +477,7 @@ def create_ontology_graph(ontology: BandoOntology) -> Tuple[Dict[str, str], List
             "attributes": {"dimensione": dim}
         })
     
-    # 3. NODI PER TIPOLOGIE DI INTERVENTO
+    # 5. NODI PER TIPOLOGIE DI INTERVENTO
     for intervento in ontology.interventi:
         tipo = intervento.get("tipo", "")
         nome = intervento.get("nome", "")
@@ -439,7 +487,6 @@ def create_ontology_graph(ontology: BandoOntology) -> Tuple[Dict[str, str], List
             intervento_id = str(uuid.uuid4())
             nodes[intervento_name] = intervento_id
             
-            # Attributi dell'intervento
             intervento_attrs = {
                 "tipo": tipo,
                 "nome": nome,
@@ -455,8 +502,7 @@ def create_ontology_graph(ontology: BandoOntology) -> Tuple[Dict[str, str], List
                 "attributes": intervento_attrs
             })
             
-            # COLGAMENTO IMPORTI - CORREZIONE QUI
-            # Controlla se esiste il dizionario per questa tipologia
+            # COLGAMENTO IMPORTI
             if tipo in ontology.importi_unitari:
                 importi = ontology.importi_unitari[tipo]
                 
@@ -485,7 +531,7 @@ def create_ontology_graph(ontology: BandoOntology) -> Tuple[Dict[str, str], List
                         "attributes": {"importo": importi, "dimensione": "tutte"}
                     })
     
-    # 4. NODI PER CRITERI DI SELEZIONE
+    # 6. NODI PER CRITERI DI SELEZIONE
     for criterio in ontology.criteri_selezione:
         codice = criterio.get("codice", "")
         nome = criterio.get("nome", "")
@@ -511,7 +557,7 @@ def create_ontology_graph(ontology: BandoOntology) -> Tuple[Dict[str, str], List
                 "attributes": criterio_attrs
             })
     
-    # 5. NODI PER REQUISITI
+    # 7. NODI PER REQUISITI
     for req in ontology.requisiti_beneficiario:
         req_name = f"REQUISITO: {req}"
         req_id = str(uuid.uuid4())
@@ -523,19 +569,7 @@ def create_ontology_graph(ontology: BandoOntology) -> Tuple[Dict[str, str], List
             "attributes": {"requisito": req}
         })
     
-    # 6. NODO LOCALIZZAZIONE
-    if ontology.sede_obbligatoria:
-        loc_name = f"LOCALIZZAZIONE: {ontology.sede_obbligatoria}"
-        loc_id = str(uuid.uuid4())
-        nodes[loc_name] = loc_id
-        relationships.append({
-            "source": bando_id,
-            "target": loc_id,
-            "type": "LIMITATO_A",
-            "attributes": {"area": ontology.sede_obbligatoria}
-        })
-    
-    # 7. NODI PER MASSIMALI - CORREZIONE QUI
+    # 8. NODI PER MASSIMALI
     if isinstance(ontology.massimali_dimensione, dict):
         for dimensione, importo in ontology.massimali_dimensione.items():
             if importo:
@@ -549,7 +583,7 @@ def create_ontology_graph(ontology: BandoOntology) -> Tuple[Dict[str, str], List
                     "attributes": {"importo_max": importo, "dimensione": dimensione}
                 })
     
-    # 8. NODI PER ATTRIBUTI BONUS
+    # 9. NODI PER ATTRIBUTI BONUS
     for attributo in ontology.attributi_bonus:
         attributo_name = f"ATTRIBUTO_BONUS: {attributo}"
         attributo_id = str(uuid.uuid4())
@@ -569,6 +603,7 @@ def create_ontology_graph(ontology: BandoOntology) -> Tuple[Dict[str, str], List
 def ingest_to_neo4j(nodes: Dict[str, str], relationships: List[Dict], driver=None, bando_attrs: Dict = None) -> Dict[str, str]:
     """
     Ingest nodes and relationships into Neo4j.
+    MODIFICA: MacroArea e Localizzazione usano MERGE per essere nodi unici
     """
     neo4j_client = driver or neo4j_driver
     
@@ -578,17 +613,53 @@ def ingest_to_neo4j(nodes: Dict[str, str], relationships: List[Dict], driver=Non
             # Determina il tipo di nodo dal nome
             if name.startswith("BANDO:"):
                 label = "Bando"
-                # Aggiungi attributi specifici del bando
                 additional_props = {}
                 if bando_attrs:
-                    # Filtra gli attributi None
                     for k, v in bando_attrs.items():
                         if v is not None:
-                            # Converti i tipi per Neo4j
                             if isinstance(v, (list, dict)):
                                 additional_props[k] = json.dumps(v, ensure_ascii=False)
                             else:
                                 additional_props[k] = v
+            
+            elif name.startswith("MACROAREA:"):
+                label = "MacroArea"
+                additional_props = {}
+                # NODO UNICO: usa MERGE per evitare duplicati
+                props_dict = {"id": node_id, "name": name}
+                props_dict.update(additional_props)
+                
+                props_str = ", ".join([f"{k}: ${k}" for k in props_dict.keys()])
+                
+                session.run(
+                    f"""
+                    MERGE (n:{label} {{id: $id}})
+                    ON CREATE SET n = {{{props_str}}}
+                    ON MATCH SET n.name = $name
+                    """,
+                    **props_dict
+                )
+                continue  # Salta al ciclo successivo
+            
+            elif name.startswith("LOCALIZZAZIONE:"):
+                label = "Localizzazione"
+                additional_props = {}
+                # NODO UNICO: usa MERGE per evitare duplicati
+                props_dict = {"id": node_id, "name": name}
+                props_dict.update(additional_props)
+                
+                props_str = ", ".join([f"{k}: ${k}" for k in props_dict.keys()])
+                
+                session.run(
+                    f"""
+                    MERGE (n:{label} {{id: $id}})
+                    ON CREATE SET n = {{{props_str}}}
+                    ON MATCH SET n.name = $name
+                    """,
+                    **props_dict
+                )
+                continue  # Salta al ciclo successivo
+            
             elif name.startswith("DIMENSIONE:"):
                 label = "Dimensione"
                 additional_props = {}
@@ -600,9 +671,6 @@ def ingest_to_neo4j(nodes: Dict[str, str], relationships: List[Dict], driver=Non
                 additional_props = {}
             elif name.startswith("REQUISITO:"):
                 label = "Requisito"
-                additional_props = {}
-            elif name.startswith("LOCALIZZAZIONE:"):
-                label = "Localizzazione"
                 additional_props = {}
             elif name.startswith("MASSIMALE"):
                 label = "Massimale"
@@ -617,7 +685,7 @@ def ingest_to_neo4j(nodes: Dict[str, str], relationships: List[Dict], driver=Non
                 label = "Entity"
                 additional_props = {}
             
-            # Crea la query CREATE con tutti i parametri
+            # Per tutti gli altri nodi (non unici), usa CREATE normale
             props_dict = {"id": node_id, "name": name}
             props_dict.update(additional_props)
             
@@ -679,11 +747,6 @@ def ingest_to_qdrant(
     - chunks: lista di stringhe (testo chunk)
     - ontology: ontologia del bando
     - nodes_dict: mappatura nome_nodo -> id_univoco (da Neo4j)
-    
-    Ogni punto Qdrant contiene:
-    - text: il testo del chunk
-    - nodes: lista di id Neo4j a cui è collegato (inizialmente solo il bando)
-    - bando_id: l'id del bando principale
     """
     # Calcola embedding per tutti i chunk
     embeddings = embedding_model.encode(chunks, convert_to_numpy=True)
@@ -698,6 +761,27 @@ def ingest_to_qdrant(
         
         # Cerca keywords nel chunk per collegamenti aggiuntivi
         chunk_lower = chunk.lower()
+        
+        # AGGIUNGI: Collegamento a MacroArea
+        if ontology.macro_area:
+            macro_name = f"MACROAREA: {ontology.macro_area}"
+            if macro_name in nodes_dict:
+                # Controlla se il testo parla della categoria
+                macro_keywords = ["digitale", "innovazione", "green", "ecologico", 
+                                 "industria", "turismo", "cultura", "agricoltura",
+                                 "salute", "formazione", "infrastrutture", "mobilità",
+                                 "internazionalizzazione", "ricerca", "sviluppo"]
+                if any(keyword in chunk_lower for keyword in macro_keywords):
+                    node_ids.append(nodes_dict[macro_name])
+        
+        # AGGIUNGI: Collegamento a Localizzazione
+        if ontology.sede_obbligatoria:
+            loc_name = f"LOCALIZZAZIONE: {ontology.sede_obbligatoria}"
+            if loc_name in nodes_dict:
+                # Controlla se il testo menziona la regione/località
+                loc_lower = ontology.sede_obbligatoria.lower()
+                if loc_lower in chunk_lower:
+                    node_ids.append(nodes_dict[loc_name])
         
         # Collegamento a dimensioni
         for dim in ontology.dimensioni_ammesse:
@@ -803,9 +887,10 @@ def retrieve_graph_context(
 
 #Graph Query
 
-def fetch_related_graph(neo4j_client, entity_ids: List[str]) -> List[Dict]:
+def fetch_related_graph(neo4j_client, entity_ids: List[str], max_relationships: int = 100) -> List[Dict]:
     """
     Recupera il subgraph con tutti gli attributi dei nodi.
+    LIMITATO a max_relationships per evitare overflow.
     """
     if not entity_ids:
         return []
@@ -813,10 +898,12 @@ def fetch_related_graph(neo4j_client, entity_ids: List[str]) -> List[Dict]:
     query = """
     MATCH (e)
     WHERE e.id IN $entity_ids
+    WITH e, COLLECT(e) as sources
     OPTIONAL MATCH (e)-[r1]-(n1)
     WHERE type(r1) IS NOT NULL
+    WITH sources, e, r1, n1, COLLECT({e: e, r1: r1, n1: n1}) as first_hop
     OPTIONAL MATCH (n1)-[r2]-(n2)
-    WHERE type(r2) IS NOT NULL
+    WHERE type(r2) IS NOT NULL AND n2.id IS NOT NULL
     RETURN 
       e as source_node,
       e.id as source_id,
@@ -834,11 +921,13 @@ def fetch_related_graph(neo4j_client, entity_ids: List[str]) -> List[Dict]:
       n2.id as target2_id,
       n2.name as target2_name,
       labels(n2) as target2_labels
+    LIMIT $limit
     """
     
     with neo4j_client.session() as session:
-        result = session.run(query, entity_ids=entity_ids)
+        result = session.run(query, entity_ids=entity_ids, limit=max_relationships)
         subgraph = []
+        processed_rels = set()
         
         for record in result:
             # Verifica che il nodo sorgente esista
@@ -847,47 +936,53 @@ def fetch_related_graph(neo4j_client, entity_ids: List[str]) -> List[Dict]:
                 
             # Aggiungi relazione 1 se esiste
             if record["rel1_type"] and record["target1_node"]:
-                subgraph.append({
-                    "source": {
-                        "id": record["source_id"],
-                        "name": record["source_name"],
-                        "labels": record["source_labels"],
-                        "attributes": dict(record["source_node"])
-                    },
-                    "target": {
-                        "id": record["target1_id"],
-                        "name": record["target1_name"],
-                        "labels": record["target1_labels"],
-                        "attributes": dict(record["target1_node"])
-                    },
-                    "relationship": {
-                        "type": record["rel1_type"],
-                        "attributes": dict(record["rel1_props"]) if record["rel1_props"] else {}
-                    }
-                })
+                rel_key = f"{record['source_id']}|{record['target1_id']}|{record['rel1_type']}"
+                if rel_key not in processed_rels:
+                    subgraph.append({
+                        "source": {
+                            "id": record["source_id"],
+                            "name": record["source_name"],
+                            "labels": record["source_labels"],
+                            "attributes": dict(record["source_node"])
+                        },
+                        "target": {
+                            "id": record["target1_id"],
+                            "name": record["target1_name"],
+                            "labels": record["target1_labels"],
+                            "attributes": dict(record["target1_node"])
+                        },
+                        "relationship": {
+                            "type": record["rel1_type"],
+                            "attributes": dict(record["rel1_props"]) if record["rel1_props"] else {}
+                        }
+                    })
+                    processed_rels.add(rel_key)
             
             # Aggiungi relazione 2 se esiste
             if record["rel2_type"] and record["target2_node"]:
-                subgraph.append({
-                    "source": {
-                        "id": record["target1_id"],
-                        "name": record["target1_name"],
-                        "labels": record["target1_labels"],
-                        "attributes": dict(record["target1_node"])
-                    },
-                    "target": {
-                        "id": record["target2_id"],
-                        "name": record["target2_name"],
-                        "labels": record["target2_labels"],
-                        "attributes": dict(record["target2_node"])
-                    },
-                    "relationship": {
-                        "type": record["rel2_type"],
-                        "attributes": dict(record["rel2_props"]) if record["rel2_props"] else {}
-                    }
-                })
+                rel_key = f"{record['target1_id']}|{record['target2_id']}|{record['rel2_type']}"
+                if rel_key not in processed_rels:
+                    subgraph.append({
+                        "source": {
+                            "id": record["target1_id"],
+                            "name": record["target1_name"],
+                            "labels": record["target1_labels"],
+                            "attributes": dict(record["target1_node"])
+                        },
+                        "target": {
+                            "id": record["target2_id"],
+                            "name": record["target2_name"],
+                            "labels": record["target2_labels"],
+                            "attributes": dict(record["target2_node"])
+                        },
+                        "relationship": {
+                            "type": record["rel2_type"],
+                            "attributes": dict(record["rel2_props"]) if record["rel2_props"] else {}
+                        }
+                    })
+                    processed_rels.add(rel_key)
     
-    print(f"[DEBUG] Subgraph recuperato con {len(subgraph)} relazioni")
+    print(f"[DEBUG] Subgraph recuperato con {len(subgraph)} relazioni (limite: {max_relationships})")
     return subgraph
 
 def format_graph_context(subgraph: List[Dict], qdrant_texts: List[str]) -> Dict:
