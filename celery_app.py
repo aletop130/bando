@@ -36,7 +36,6 @@ headers = {
     "Authorization": f"Bearer {REGOLO_KEY}",
 }
 
-# backend/celery_app.py - MODIFICA QUESTA FUNZIONE SOLO
 @celery_app.task(bind=True, max_retries=2)
 def regolo_call(self, prompt: str, response_format: str = "text") -> str:
     """Task che chiama Regolo con supporto per JSON mode"""
@@ -46,7 +45,6 @@ def regolo_call(self, prompt: str, response_format: str = "text") -> str:
         "temperature": 0.1,  # Abbassato per consistenza
     }
     
-    # Aggiungi JSON mode se richiesto
     if response_format == "json":
         data["response_format"] = {"type": "json_object"}
     
@@ -63,7 +61,6 @@ def regolo_call(self, prompt: str, response_format: str = "text") -> str:
         resp.raise_for_status()
         response_json = resp.json()
         
-        # Gestione diversa per JSON mode vs text
         if response_format == "json":
             # Restituisci il JSON completo
             return json.dumps(response_json)

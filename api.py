@@ -271,7 +271,7 @@ async def chat_with_document(request: ChatRequest):
         entity_ids, qdrant_texts, graph_context = retrieve_graph_context(
             query=user_query,
             collection_name=collection_name,
-            top_k=5
+            top_k=10
         )
         
         if not entity_ids:

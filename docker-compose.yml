@@ -26,7 +26,6 @@ services:
     volumes:
       - redis_data:/data
 
-
 volumes:
   neo4j_data:
   qdrant_storage:
