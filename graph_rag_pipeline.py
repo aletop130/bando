@@ -330,8 +330,9 @@ Analizza il seguente bando e estrai TUTTE le informazioni strutturate seguendo l
      "Ricercatori", "Scuole e studenti", "Startup e spinoff", 
      "Startup innovative", "Università e ricerca"
 
-10. **SEDE OBBLIGATORIA** (se specificata):
-    - Solo il nome della regione: "Lazio", non "Regione Lazio"
+10. **SEDE OBBLIGATORIA** (Regione, anche se non specificata):
+    - NON PUò essere null
+    - Solo il nome della regione: ES: "Lazio", non "Regione Lazio". MA POSSONO ESSERCI ALTRE REGIONI
     - Per stati: "Italia", non "Stato italiano"
 
 **STRUTTURA JSON OBBLIGATORIA:**
@@ -351,7 +352,7 @@ Analizza il seguente bando e estrai TUTTE le informazioni strutturate seguendo l
   "piattaforma_presentazione": "string | null",
   "dimensioni_ammesse": ["lista di stringhe"],
   "requisiti_beneficiario": ["lista di stringhe"],
-  "sede_obbligatoria": "string | null",
+  "sede_obbligatoria": "string",
   "attributi_bonus": ["lista di stringhe"],
   "tipologie_intervento": ["lista di stringhe"],
   "importo_minimo_progetto": "number | null",
@@ -399,6 +400,7 @@ def extract_ontology_from_text(full_text: str) -> BandoOntology:
     prompt = build_ontology_prompt_complete(full_text)
     task = regolo_call.delay(prompt)
     response = task.get(timeout=400)
+    print(response)
     
     if not response:
         raise ValueError("Risposta vuota dal LLM")
@@ -421,7 +423,7 @@ def extract_ontology_from_text(full_text: str) -> BandoOntology:
         return BandoOntology(**data)
     except Exception as e:
         print(f"[ERROR] Errore nel parsing JSON: {e}")
-        print(f"[ERROR] JSON ricevuto: {json_str[:1000]}")
+        print(f"[ERROR] JSON ricevuto: {json_str[:1500]}")
         raise
 
 #Creazione Neo4j Graph
