@@ -1,0 +1,177 @@
+{
+  "id": "8af184d9-3fca-4c43-9690-a870ffdf14d4",
+  "identificativo": "AVVISO PUBBLICO INVESTIMENTI STRATEGICI PMI",
+  "autorita": "Regione Lazio - Direzione Regionale Sviluppo Economico, Attivit\u00e0 Produttive e Ricerca",
+  "soggetto_attuatore": "Lazio Innova S.p.A.",
+  "dotazione_finanziaria": 40000000.0,
+  "regime_aiuto": "A fondo perduto",
+  "tematiche": [
+    "Innovazione",
+    "Sostenibilit\u00e0",
+    "Transizione ecologica",
+    "Digitalizzazione"
+  ],
+  "tipologie_fondo": [
+    "Europei"
+  ],
+  "tipologie_agevolazione": [
+    "A Fondo perduto",
+    "De Minimis"
+  ],
+  "destinatari": [
+    "Imprese",
+    "Piccole imprese",
+    "Medie Imprese",
+    "Micro-imprese"
+  ],
+  "data_apertura_formulario": "2025-07-02T00:00:00",
+  "data_inizio_domande": "2025-07-17T12:00:00",
+  "data_fine_domande": "2026-03-05T17:00:00",
+  "piattaforma_presentazione": "GeCoWEB Plus",
+  "dimensioni_ammesse": [
+    "PMI"
+  ],
+  "requisiti_beneficiario": [
+    "PMI",
+    "Non essere Impresa in Difficolt\u00e0",
+    "Iscritta al Registro delle Imprese Italiano",
+    "Avere Unit\u00e0 Produttive nel Lazio registrate al Registro delle Imprese Italiano"
+  ],
+  "sede_obbligatoria": "Lazio",
+  "attributi_bonus": [
+    "DNSH",
+    "Certificazione di Parit\u00e0 di Genere",
+    "Certificazione Ambientale"
+  ],
+  "tipologie_intervento": [
+    "Investimenti",
+    "Attivit\u00e0 di Formazione",
+    "Consulenze e Servizi",
+    "Premio per la Fideiussione"
+  ],
+  "sottotipologie_cloud": [],
+  "importo_minimo_progetto": 500000.0,
+  "tempo_realizzazione_mesi": 18,
+  "esclusioni": [
+    "Creazione di una nuova Unit\u00e0 Produttiva non ammessa",
+    "Costi per la semplice sostituzione di beni esistenti non ammessi",
+    "Investimenti che riguardano unit\u00e0 produttive non esistenti o non preesistenti",
+    "Diversificazione di Unit\u00e0 Produttive localizzate in Zone non ammissibili (PLUS o Ordinarie) conformi ai requisiti minimi",
+    "Investimenti rientranti nel Regolamento STEP (UE 2024/795)",
+    "Attivit\u00e0 economiche escluse (settore finanziario e assicurativo; produzione primaria agricola; pesca e acquacoltura; carbone; banda larga; siderurgia; lignite; trasporti; ecc.)",
+    "Giochi d\u2019azzardo, commercio sessuale e attivit\u00e0 correlate, difesa o altri settori esclusi dalla normativa",
+    "Delocalizzazione dell\u2019attivit\u00e0 fuori dal Lazio entro 5 anni dall\u2019erogazione del saldo; fuori dallo SEE entro 10 anni"
+  ],
+  "interventi": [
+    {
+      "tipo": "A",
+      "nome": "Investimenti (Tipologia di Intervento A)",
+      "descrizione": "Costi Ammissibili relativi agli Investimenti: A.1 Acquisti di impianti/macchinari/attrezzature; A.2 Acquisti di beni immateriali; A.3 Acquisti di terreni; A.4 Lavori edili/opere civili; A.5 Progettazione e spese tecniche; A.6 Canoni SaaS/IaaS/Paas e servizi digitali",
+      "restrizioni": [
+        "Non ammissibile la creazione di una nuova Unit\u00e0 Produttiva",
+        "Costo Ammissibile attribuibile a una delle tre Tipologie di Investimento (A1, A4) in caso di parti sostitutive",
+        "Per Investimenti in diversificazione in Zone Assistite PLUS/Ordinarie, valore minimo pari a 300% del valore contabile delle immobilizzazioni riutilizzate"
+      ]
+    },
+    {
+      "tipo": "B",
+      "nome": "Attivit\u00e0 di Formazione",
+      "descrizione": "Costi Ammissibili B.1 Spese per organizzazione e formazione; B.2 Costi per la partecipazione dei Dipendenti all\u2019Attivit\u00e0 di Formazione",
+      "restrizioni": [
+        "Partecipazione dei Dipendenti attestata e non documentata/preventivo; costo ammesso nel limite del 20% di B.1"
+      ]
+    },
+    {
+      "tipo": "C",
+      "nome": "Consulenze e Servizi",
+      "descrizione": "Costi Ammissibili C.1.1/C.1.2: consulenze industrializzazione e prima commercializzazione; C.2 Spese per redazione situazione contabile (max 700\u20ac)",
+      "restrizioni": [
+        "Documentazione dettagliata di preventivi e CV/riferimenti professionali; tempi uomo e attivit\u00e0 correlate"
+      ]
+    },
+    {
+      "tipo": "D",
+      "nome": "Premio per la Fideiussione",
+      "descrizione": "Costo Ammissibile D.1: premio per la Fideiussione a garanzia dell\u2019anticipo obbligatorio",
+      "restrizioni": []
+    }
+  ],
+  "natura_contributo": "A fondo perduto (sovvenzione diretta in denaro)",
+  "importi_unitari": {},
+  "massimali_dimensione": {},
+  "incompatibilita_aiuti": false,
+  "criteri_selezione": [
+    {
+      "codice": "C1",
+      "nome": "Sostenibilit\u00e0 economico-finanziaria del progetto",
+      "max_punti": 50,
+      "descrizione": "Analisi della economicit\u00e0 della proposta e sostenibilit\u00e0 finanziaria per copertura costi di gestione e manutenzione",
+      "formula": null
+    },
+    {
+      "codice": "C2",
+      "nome": "Qualit\u00e0 progettuale",
+      "max_punti": 30,
+      "descrizione": "Definizione degli obiettivi, metodologia e procedure di attuazione",
+      "formula": null
+    },
+    {
+      "codice": "P1",
+      "nome": "Economia a basse emissioni di carbonio, resilienza e economia circolare",
+      "max_punti": 10,
+      "descrizione": "Priorit\u00e0 a progetti con focus su sostenibilit\u00e0 ambientale",
+      "formula": null
+    },
+    {
+      "codice": "P2",
+      "nome": "Certificazione di parit\u00e0 di genere",
+      "max_punti": 5,
+      "descrizione": "Possesso della certificazione di parit\u00e0 di genere",
+      "formula": null
+    },
+    {
+      "codice": "P3",
+      "nome": "Certificazione ambientale",
+      "max_punti": 5,
+      "descrizione": "Possesso di certificazioni ambientali/energia/impatti ambientali",
+      "formula": null
+    }
+  ],
+  "criterio_tiebreak": null,
+  "allegati_obbligatori": [
+    "Proposte progettuali modello 1 e modello 2",
+    "Dichiarazione DNSH",
+    "Relazione di verifica climatica",
+    "Documentazione tecnica a supporto della valutazione di ammissibilit\u00e0 dei Costi Ammissibili (preventivi, perizie, contratti, Titoli di Disponibilit\u00e0, computo metrico estimativo)",
+    "Preventivi dettagliati per costi A.1 e A.2; contratti per A.3-A.4; computi metrici; Titoli di Disponibilit\u00e0",
+    "Documentazione IVA (modello 5) o indicazione dell\u2019indetraibilit\u00e0",
+    "Dichiarazioni modelli 6 e 7 ( Allegato all\u2019Avviso )",
+    "Relazione sull\u2019avvenuto versamento del capitale e documenti di regolarit\u00e0",
+    "Dichiarazioni per capitale (modello 4) e altre dichiarazioni richieste"
+  ],
+  "piattaforma_invio": "GeCoWEB Plus",
+  "regola_senza_soccorso": false,
+  "ordine_istruttoria": "Sportello",
+  "modalita_erogazione": "Anticipo, SAL, saldo",
+  "documenti_erogazione": [
+    "Relazione sullo stato di attuazione e obiettivi raggiunti",
+    "Relazione sui costi sostenuti e avanzamento delle attivit\u00e0",
+    "Fideiussione per anticipo",
+    "Documentazione relativa ai contratti, Titoli di Spesa e estratti conto",
+    "Dichiarazioni modelli 5, 6 e 7 (quando previsto)"
+  ],
+  "condizioni_revoca": [
+    "Mancata trasmissione delle informazioni necessarie entro i termini",
+    "Mancato rispetto dei requisiti soggettivi o possesso/acquisizione/unit\u00e0 nel Lazio",
+    "Dichiarazioni mendaci o irregolari",
+    "Delocalizzazione dell\u2019attivit\u00e0 o dell\u2019unit\u00e0 produttiva fuori Lazio entro i termini previsti",
+    "Alienazione, cessione o distacco di investimenti entro i termini previsti",
+    "Ordine di recupero pendente a seguito di decisione UE",
+    "Irregolarit\u00e0 accertate da Lazio Innova o Autorit\u00e0 competenti",
+    "Altre violazioni di legge o obblighi dell\u2019Avviso o dell\u2019Atto d\u2019Impegno"
+  ],
+  "file_name": "e5bc4d33-1440-48ea-8346-107c41a4227f_DD_G08250_27_06_2025_Bando.pdf",
+  "pagine_totali": null,
+  "data_processing": "2025-12-24T00:11:45.298689",
+  "fonte": null
+}

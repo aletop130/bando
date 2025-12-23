@@ -1,0 +1,170 @@
+{
+  "id": "a5e6a284-f6ae-47fc-8ea4-708c842a7dab",
+  "identificativo": "AVVISO SOSTEGNO ALLE IMPRESE COOPERATIVE",
+  "autorita": "Regione Lazio",
+  "soggetto_attuatore": "Lazio Innova S.p.A.",
+  "dotazione_finanziaria": 2074663.98,
+  "regime_aiuto": "De Minimis",
+  "tematiche": [
+    "Innovazione",
+    "Digitalizzazione",
+    "Economia Circolare",
+    "Sostenibilit\u00e0",
+    "Internazionalizzazione",
+    "Formazione"
+  ],
+  "tipologie_fondo": [
+    "Regional"
+  ],
+  "tipologie_agevolazione": [
+    "A Fondo perduto"
+  ],
+  "destinatari": [
+    "Imprese"
+  ],
+  "data_apertura_formulario": "2025-01-15T12:00:00",
+  "data_inizio_domande": "2025-04-09T12:00:00",
+  "data_fine_domande": "2025-12-19T17:00:00",
+  "piattaforma_presentazione": "GeCoWEB Plus",
+  "dimensioni_ammesse": [],
+  "requisiti_beneficiario": [
+    "Requisiti generali di ammissibilit\u00e0 (Appendice 2)",
+    "DURC valido alla data della Domanda",
+    "Imprese Cooperative del Lazio iscritte al Registro delle Imprese Italiano e all'Albo Nazionale delle Societ\u00e0 Cooperative",
+    "Sede Operativa nel Lazio entro erogazione del saldo",
+    "Non essere in liquidazione, fallimento o altre condizioni ostative"
+  ],
+  "sede_obbligatoria": "Lazio",
+  "attributi_bonus": [],
+  "tipologie_intervento": [
+    "A. innovazione tecnologica, digitalizzazione e sostenibilit\u00e0 ambientale (open innovation, ICT, investimenti produttivi)",
+    "B. avviare nuove cooperative nelle direzioni indicate o con buon potenziale occupazionale",
+    "C. adeguare i sistemi organizzativi delle cooperative esistenti e riqualificando le risorse umane",
+    "D. creare e rafforzare reti, partnership, filiere e altre forme di collaborazione tra imprese cooperative (circular economy e internazionalizzazione)"
+  ],
+  "sottotipologie_cloud": [],
+  "importo_minimo_progetto": 10000.0,
+  "tempo_realizzazione_mesi": 12,
+  "esclusioni": [
+    "spese derivanti da autoproduzione o autofatturazione da parte dell\u2019impresa Beneficiaria",
+    "spese sostenute nei confronti di Parti Correlate",
+    "acquisto di beni usati",
+    "Titoli di Spesa inferiori a 500,00 euro",
+    "beni di rappresentanza o uso promiscuo e veicoli targati",
+    "beni acquisiti con locazione finanziaria",
+    "contratti chiavi in mano o non dettagliabili",
+    "ordinaria attivit\u00e0 amministrativa aziendale o commerciale",
+    "persone fisiche sprovviste di partita IVA",
+    "IVA",
+    "interessi passivi e oneri accessori di natura finanziaria",
+    "multe, penali, ammende e sanzioni pecuniarie"
+  ],
+  "interventi": [
+    {
+      "tipo": "Intervento",
+      "nome": "A. innovazione tecnologica, digitalizzazione e sostenibilit\u00e0 ambientale (open innovation, ICT, investimenti produttivi)",
+      "descrizione": "Aumentare innovazione tecnologica, digitalizzazione e sostenibilit\u00e0 ambientale mediante open innovation, l\u2019adozione di nuovi sistemi ICT e investimenti produttivi",
+      "restrizioni": [
+        "Spese Ammissibili non inferiori a 10.000,00 euro",
+        "Sede Operativa nel Lazio",
+        "Non riguarda la produzione primaria di prodotti della pesca e dell\u2019acquacoltura",
+        "Essere avviato dopo la data di presentazione della Domanda",
+        "Durata massima 12 mesi dalla Data di Concessione, proroga massima di 3 mesi"
+      ]
+    },
+    {
+      "tipo": "Intervento",
+      "nome": "B. avviare nuove cooperative nelle direzioni indicate o con buon potenziale occupazionale",
+      "descrizione": "Sostegno all\u2019avvio di nuove cooperative o di iniziative con potenziale occupazionale nel Lazio",
+      "restrizioni": [
+        "Spese Ammissibili non inferiori a 10.000,00 euro",
+        "Sede Operativa nel Lazio",
+        "Non riguarda la produzione primaria di pesca o acquacoltura",
+        "Avvio dopo presentazione Domanda",
+        "Durata massima 12 mesi dalla Data di Concessione, proroga 3 mesi"
+      ]
+    },
+    {
+      "tipo": "Intervento",
+      "nome": "C. adeguare i sistemi organizzativi delle cooperative esistenti e riqualificare risorse umane",
+      "descrizione": "Riqualificazione delle risorse umane e aumento della specializzazione mediante formazione specialistica, temporary e circular manager",
+      "restrizioni": [
+        "Spese Ammissibili non inferiori a 10.000,00 euro",
+        "Sede Operativa nel Lazio",
+        "Non riguarda la pesca o acquacoltura",
+        "Avvio post Domanda; durata entro 12 mesi (possibile proroga 3 mesi)"
+      ]
+    },
+    {
+      "tipo": "Intervento",
+      "nome": "D. creare e rafforzare reti, partnership, filiere e altre forme di collaborazione tra imprese cooperative (circular economy e internazionalizzazione)",
+      "descrizione": "Reti e partenariati tra cooperative nel contesto di circular economy e internazionalizzazione",
+      "restrizioni": [
+        "Spese Ammissibili non inferiori a 10.000,00 euro",
+        "Sede Operativa nel Lazio",
+        "Non riguarda la pesca o acquacoltura",
+        "Avvio post Domanda; durata entro 12 mesi (possibile proroga 3 mesi)"
+      ]
+    }
+  ],
+  "natura_contributo": "Contributo a fondo perduto",
+  "importi_unitari": {},
+  "massimali_dimensione": {},
+  "incompatibilita_aiuti": false,
+  "criteri_selezione": [
+    {
+      "codice": "C1",
+      "nome": "Risultati attesi in termini di innovazione, sostenibilit\u00e0 ambientale e ritorni economici e occupazionali",
+      "max_punti": 50,
+      "descrizione": "Valuta i benefici attesi per le Imprese Cooperative direttamente coinvolte e per la comunit\u00e0",
+      "formula": null
+    },
+    {
+      "codice": "C2",
+      "nome": "Coerenza delle proposte rispetto agli obiettivi strategici del Piano Specifico 2022/2024",
+      "max_punti": 30,
+      "descrizione": "Valuta coerenza con Nuove cooperative, Riqualificazione, Digitalizzazione e Internazionalizzazione",
+      "formula": null
+    },
+    {
+      "codice": "C3",
+      "nome": "Congruit\u00e0 delle Spese Ammissibili rispetto alle attivit\u00e0 proposte e ai risultati attesi",
+      "max_punti": 20,
+      "descrizione": "Valuta la congruit\u00e0 delle spese rispetto agli obiettivi e alla produttivit\u00e0 di mercato",
+      "formula": null
+    }
+  ],
+  "criterio_tiebreak": null,
+  "allegati_obbligatori": [
+    "Modello di Domanda (Allegato all\u2019Avviso)",
+    "Modello 3 (Proponente Mandante per aggregazioni)",
+    "Contratto di aggregazione (Appendice 4) o testo equivalente",
+    "Piano di progetto/business plan, analisi di mercato",
+    "Curriculum vitae o referenze delle figure chiave",
+    "Documentazione di supporto alle Spese Ammissibili (preventivi, distinte tecniche, prezzi)"
+  ],
+  "piattaforma_invio": "GeCoWEB Plus",
+  "regola_senza_soccorso": false,
+  "ordine_istruttoria": "Istruttoria formale \u2192 Valutazione \u2192 Concessione",
+  "modalita_erogazione": "Saldo, in un\u2019unica soluzione",
+  "documenti_erogazione": [
+    "Relazione sulla realizzazione del Progetto e obiettivi raggiunti",
+    "Documentazione di spesa relative alle Spese Effettivamente Sostenute (contratti, Titoli di Spesa, attestazioni di pagamento)"
+  ],
+  "condizioni_revoca": [
+    "Mancata trasmissione dell\u2019Atto di Impegno entro i termini previsti",
+    "Mancato rispetto dei requisiti di possesso, acquisizione e mantenimento",
+    "Dichiarazioni mendaci ai sensi del DPR 445/2000",
+    "Mancato completamento o rendicontazione entro il termine di realizzazione",
+    "Mancata dimostrazione di Sede Operativa nel Lazio all\u2019erogazione a saldo",
+    "Progetto gravemente difforme da quello approvato",
+    "Mancato consenso a controlli e verifiche o esito negativo",
+    "Cessazione o trasferimento dell\u2019attivit\u00e0 beneficiaria entro 3 anni dall\u2019erogazione del saldo",
+    "Alienazione o distacco degli Investimenti materiali agevolati entro 3 anni (salvo sostituzione) ",
+    "Altre violazioni di legge o mancato rispetto degli obblighi dell\u2019Avviso o dell\u2019Atto di Impegno"
+  ],
+  "file_name": "cfc3f0ba-c83c-4b00-88f6-50813f3f9a03_DD_G00028_03_01_2025_Bando.pdf",
+  "pagine_totali": null,
+  "data_processing": "2025-12-24T00:11:29.581526",
+  "fonte": null
+}

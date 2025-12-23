@@ -1,0 +1,161 @@
+{
+  "id": "d0bc9236-d9cb-4716-88b6-7b0437ca9a58",
+  "identificativo": "AVVISO Lazio Cinema Futuro",
+  "autorita": "Regione Lazio",
+  "soggetto_attuatore": "Lazio Innova S.p.A.",
+  "dotazione_finanziaria": 6500000.0,
+  "regime_aiuto": "RGE (Regolamento Generale di Esenzione)",
+  "tematiche": [
+    "Educazione al sentimento",
+    "Storia",
+    "Benessere",
+    "Turismo"
+  ],
+  "tipologie_fondo": [
+    "Regional"
+  ],
+  "tipologie_agevolazione": [
+    "A Fondo perduto"
+  ],
+  "destinatari": [
+    "Imprese",
+    "Piccole imprese",
+    "Medie Imprese",
+    "Micro-imprese"
+  ],
+  "data_apertura_formulario": "2025-11-14T12:00:00",
+  "data_inizio_domande": "2025-11-14T12:00:00",
+  "data_fine_domande": "2026-02-12T17:00:00",
+  "piattaforma_presentazione": "GeCoWEB Plus",
+  "dimensioni_ammesse": [
+    "PMI"
+  ],
+  "requisiti_beneficiario": [
+    "Essere PMI al momento della Domanda e fino alla Concessione",
+    "Non essere Impresa in Difficolt\u00e0 al momento della Domanda e fino alla Concessione",
+    "Possedere la Sede Operativa nel Lazio al momento della prima richiesta di erogazione e fino all'erogazione del saldo",
+    "Regolarit\u00e0 contributiva DURC",
+    "Capacit\u00e0 finanziaria di garantire il completamento del Film (rapporto tra valore della produzione e costo della produzione)"
+  ],
+  "sede_obbligatoria": "Lazio",
+  "attributi_bonus": [
+    "Opera Prima o Seconda",
+    "Giovani Autori",
+    "Rilevante componente femminile"
+  ],
+  "tipologie_intervento": [
+    "Aiuto principale",
+    "Aiuto accessorio (De Minimis)"
+  ],
+  "sottotipologie_cloud": [],
+  "importo_minimo_progetto": 2500000.0,
+  "tempo_realizzazione_mesi": null,
+  "esclusioni": [
+    "RGE inferiore a 250.000 euro (al netto di De Minimis sui costi per l'Asseverazione obbligatoria)",
+    "Inizio delle Riprese non conforme o non avvenuto entro i termini previsti per i Film agevolati"
+  ],
+  "interventi": [],
+  "natura_contributo": "A fondo perduto",
+  "importi_unitari": {},
+  "massimali_dimensione": {},
+  "incompatibilita_aiuti": false,
+  "criteri_selezione": [
+    {
+      "codice": "1",
+      "nome": "Aderenza del Film a tematiche previste",
+      "max_punti": 25,
+      "descrizione": "Aderenza del Film a una o pi\u00f9 tematiche: educazione al sentimento, storia, benessere, turismo",
+      "formula": null
+    },
+    {
+      "codice": "2",
+      "nome": "Qualit\u00e0 tecnica della scrittura e innovazione",
+      "max_punti": 20,
+      "descrizione": "Qualit\u00e0 tecnica della scrittura e innovazione rispetto ai generi di riferimento (incl. animazione)",
+      "formula": null
+    },
+    {
+      "codice": "3",
+      "nome": "Capacit\u00e0 finanziaria dei produttori",
+      "max_punti": 15,
+      "descrizione": "Capacit\u00e0 finanziaria dei produttori in rapporto al budget del film e capacit\u00e0 di realizzare e diffondere nelle sale",
+      "formula": null
+    },
+    {
+      "codice": "4",
+      "nome": "Capacit\u00e0 ed esperienze del regista, sceneggiatori e autori",
+      "max_punti": 10,
+      "descrizione": "Capacit\u00e0 ed esperienze del regista, degli sceneggiatori, degli altri autori e figure chiave",
+      "formula": null
+    },
+    {
+      "codice": "5",
+      "nome": "Capacit\u00e0 promozionali del film sul territorio",
+      "max_punti": 10,
+      "descrizione": "Capacit\u00e0 del Film di promuovere la conoscenza del territorio, della cultura e di Roma Capitale",
+      "formula": null
+    },
+    {
+      "codice": "6",
+      "nome": "Rapporto tra Spesa Ammissibile Territoriale e Spesa Ammissibile Diretta",
+      "max_punti": 10,
+      "descrizione": "Rapporto tra Spesa Ammissibile Territoriale e Spesa Ammissibile Diretta totale; punteggio per interpolazione tra 50% e 80%",
+      "formula": "Interpolazione lineare tra 50% (0 punti) e 80% (10 punti)"
+    },
+    {
+      "codice": "7",
+      "nome": "Opere Prime e Seconde o Giovani Autori",
+      "max_punti": 5,
+      "descrizione": "Priorit\u00e0 a opere prime/seconda o giovani autori",
+      "formula": null
+    },
+    {
+      "codice": "8",
+      "nome": "Rilevante componente femminile",
+      "max_punti": 5,
+      "descrizione": "Punteggio per presenza di donne nelle posizioni chiave o propriet\u00e0 femminili rilevanti",
+      "formula": "Se almeno una delle condizioni: regista donna o titolare donna, ecc."
+    }
+  ],
+  "criterio_tiebreak": "In caso di parit\u00e0 di punteggio, prevale il punteggio ottenuto sul primo criterio di valutazione; in caso di ulteriore parit\u00e0 si applica il punteggio sul secondo criterio, e cos\u00ec via",
+  "allegati_obbligatori": [
+    "Copia della richiesta preventiva di credito di imposta (D.I. Tax Credit Produttori)",
+    "Sceneggiatura in lingua italiana",
+    "Piano di lavorazione",
+    "Dati e Calcoli Film (Dati e Calcoli Film)",
+    "Track record del Proponente e Coproduttori, distributori e soggetti incaricati delle Produzioni in Appalto",
+    "Curriculum vitae del regista, degli sceneggiatori e degli altri autori gi\u00e0 contrattualizzati",
+    "Nel caso di proponenti in associazione: copia del Contratto di Associazione in Partecipazione",
+    "Polizza assicurativa in corso di validit\u00e0 (polizza catastrofale)",
+    "Dati di bilancio di eventuali soggetti al Registro delle Imprese Italiano (ultimi tre bilanci)",
+    "Documentazione attestante capienza degli importi riconosciuti (per i contributi automatici e altri aiuti)",
+    "Documentazione relativa ai contratti di Produzione in Appalto o Associazione in Partecipazione e relativa documentazione civilistica e fiscale"
+  ],
+  "piattaforma_invio": "GeCoWEB Plus",
+  "regola_senza_soccorso": false,
+  "ordine_istruttoria": "Formale -> Valutazione -> Concessione",
+  "modalita_erogazione": "Anticipo obbligatorio del 40% entro 10 mesi dalla Data di Concessione, garantito da fideiussione; saldo entro 30 giorni dalla presentazione della richiesta definitiva di credito di imposta per la produzione di opere Legge Cinema e comunque entro 18 mesi dalla Data di Concessione (30 mesi per Film di Animazione); differimenti previsti per casi specifici",
+  "documenti_erogazione": [
+    "Atto di Impegno debitamente sottoscritto",
+    "Richiesta definitiva di credito di imposto per la produzione di opere cinematografiche (Legge Cinema)",
+    "Perizia giurata di Revisore Legale (Asseverazione Obbligatoria dei Costi Effettivamente Sostenuti)",
+    "Documentazione relativa alle Spese Effettivamente Sostenute (Titoli di Spesa, contratti, pagamenti)",
+    "Documentazione di regolarit\u00e0 contributiva DURC e polizza catastrofale"
+  ],
+  "condizioni_revoca": [
+    "Rinuncia esplicita entro 10 mesi dalla Data di Concessione",
+    "Esito negativo delle verifiche antimafia (Disciplina Antimafia)",
+    "Mancato rispetto del possesso, acquisizione e mantenimento della sede operativa",
+    "Dichiarazioni mendaci ai sensi del DPR 445/2000",
+    "Mancato rispetto dei termini per la richiesta di erogazione o per il saldo",
+    "Grave difformit\u00e0 del Film rispetto al progetto approvato",
+    "Il Film non ottenga il credito di imposta o la classificazione relativa venga revocata",
+    "Inosservanza degli obblighi di controllo, verifica o comunicazioni al pubblico del sostegno",
+    "Distribuzione del Film al di fuori dei canali previsti o interessi estranei",
+    "Cessazione dell'attivit\u00e0 dell'impresa beneficiaria entro 5 anni dal saldo (salvo fallimento non fraudolento)"
+  ],
+  "file_name": "84f91d8b-cb89-4dd4-a34d-c3bfc9f893e8_DD_G14904_10_11_2025_Bando.pdf",
+  "pagine_totali": null,
+  "data_processing": "2025-12-24T00:17:22.688363",
+  "fonte": null
+}

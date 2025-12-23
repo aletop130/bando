@@ -1,0 +1,121 @@
+{
+  "id": "53f381f5-e4f1-4f42-943e-7905427eae91",
+  "identificativo": "Avviso Pubblico Sostituzione di Impianti Termici Inquinanti",
+  "autorita": "Regione Lazio - Lazio Innova",
+  "soggetto_attuatore": null,
+  "dotazione_finanziaria": 3000000.0,
+  "regime_aiuto": "A fondo perduto - contributo integrativo regionale non Aiuto di Stato",
+  "tematiche": [
+    "Transizione ecologica",
+    "Sostenibilit\u00e0"
+  ],
+  "tipologie_fondo": [
+    "Regional"
+  ],
+  "tipologie_agevolazione": [
+    "A Fondo perduto"
+  ],
+  "destinatari": [
+    "Imprese",
+    "Persone giuridiche",
+    "Altri enti",
+    "Pubblica Amministrazione"
+  ],
+  "data_apertura_formulario": "2024-07-16T12:00:00",
+  "data_inizio_domande": "2024-07-16T12:00:00",
+  "data_fine_domande": "2025-04-30T17:00:00",
+  "piattaforma_presentazione": "GeCoWEB Plus",
+  "dimensioni_ammesse": [
+    "Potenza termica utile nominale fino a 500 kW per intervento 2.A",
+    "Superficie solare lorda fino a 500 m2 per intervento 2.C"
+  ],
+  "requisiti_beneficiario": [
+    "Soggetto Responsabile ai sensi del Conto Termico 2.0",
+    "Possesso dei requisiti di ammissibilit\u00e0 per persone giuridiche come previsto dall\u2019Allegato 2",
+    "Non decadenza, non sospensione o divieto previsti dalla Disciplina Antimafia",
+    "Dichiarazioni rese ai sensi degli artt. 46 e 47 del D.P.R. 445/2000",
+    "Rispetto degli obblighi di mantenimento e di iscrizione nei catasti regionali",
+    "Verifica della veridicit\u00e0 delle dichiarazioni (controlli a campione fino al 5%)"
+  ],
+  "sede_obbligatoria": "Lazio",
+  "attributi_bonus": [
+    "Contributo integrativo regionale pari al 50% dell\u2019importo riconosciuto dal Conto Termico 2.0",
+    "Limite massimo complessivo del 100% dell\u2019importo della spesa ammessa"
+  ],
+  "tipologie_intervento": [
+    "2.A",
+    "2.B",
+    "2.E",
+    "2.C"
+  ],
+  "sottotipologie_cloud": [],
+  "importo_minimo_progetto": null,
+  "tempo_realizzazione_mesi": null,
+  "esclusioni": [
+    "Interventi non conformi alle tipologie previste dall\u2019articolo 3",
+    "Nuove installazioni non configurabili come sostituzione di impianti esistenti",
+    "Uso di apparecchi e componenti di nuova costruzione non dimensionati correttamente",
+    "Mantenimento degli impianti agevolati per meno di 5 anni",
+    "Mantenimento non conforme alle norme applicabili o registrazione non effettuata",
+    "Ubicazione degli interventi non compresa nei comuni del Lazio indicati (Agglomerato Roma, Valle del Sacco)"
+  ],
+  "interventi": [
+    {
+      "tipo": "2.A",
+      "nome": "Sostituzione di impianti di climatizzazione invernale o di riscaldamento esistenti con impianti di climatizzazione invernale utilizzanti pompe di calore elettriche o a gas, anche geotermiche",
+      "descrizione": "Intervento ammesso ai sensi dell\u2019art. 4, comma 2, lett. a) del D.M. 16 febbraio 2016; unico per nuovi impianti con potenza termica utile nominale fino a 500 kW.",
+      "restrizioni": [
+        "Potenza termica utile nominale non superiore a 500 kW"
+      ]
+    },
+    {
+      "tipo": "2.B",
+      "nome": "Sostituzione di impianti di climatizzazione invernale \u2026 con generatori di calore alimentati da biomassa",
+      "descrizione": "Intervento di sostituzione con generatori di calore alimentati da biomassa, descritto dall\u2019art. 4, comma 2, lettera b); ammissibile previo condizioni sul generatore sostituito (caminetto aperto o chiuso, stufa, caldaia) e classe prestazionale biomassa <4 stelle.",
+      "restrizioni": [
+        "Generatore di calore sostituito deve essere caminetto aperto, caminetto chiuso, stufa o simili alimentati a biomassa con classe prestazionale < 4 stelle"
+      ]
+    },
+    {
+      "tipo": "2.E",
+      "nome": "Sostituzione di impianti di climatizzazione invernale esistenti con sistemi ibridi a pompa di calore",
+      "descrizione": "Intervento di sostituzione con sistemi ibridi a pompa di calore, descritto dall\u2019art. 4, comma 2, lettera e).",
+      "restrizioni": []
+    },
+    {
+      "tipo": "2.C",
+      "nome": "Installazione di collettori solari termici, anche abbinati a sistemi di solar cooling",
+      "descrizione": "Intervento di installazione di collettori solari termici, anche abbinati a sistemi di solar cooling; ammissibile solo se collettori hanno superficie solare lorda fino a 500 m2.",
+      "restrizioni": [
+        "Superficie solare lorda fino a 500 m2"
+      ]
+    }
+  ],
+  "natura_contributo": "Contributo integrativo regionale a fondo perduto",
+  "importi_unitari": {},
+  "massimali_dimensione": {},
+  "incompatibilita_aiuti": false,
+  "criteri_selezione": [],
+  "criterio_tiebreak": null,
+  "allegati_obbligatori": [
+    "Scheda Contratto relativa al contributo del Conto Termico 2.0"
+  ],
+  "piattaforma_invio": "GeCoWEB Plus",
+  "regola_senza_soccorso": false,
+  "ordine_istruttoria": "Cronologico di presentazione delle Domande",
+  "modalita_erogazione": "Bonifico bancario o postale",
+  "documenti_erogazione": [],
+  "condizioni_revoca": [
+    "Verifica di revoca del contributo Conto Termico 2.0 ai sensi dell\u2019art. 14 del DM 16/02/2016",
+    "Revoca del contributo Conto Termico 2.0 da parte del GSE ai sensi dell\u2019art. 14 DM 16/02/2016",
+    "Mancato rispetto di una o pi\u00f9 caratteristiche riguardanti tipologie, ubicazione e requisiti dei soggetti beneficiari",
+    "Dichiarazioni mendaci ai sensi del DPR 445/2000",
+    "Mancato consenso ai controlli o irregolarit\u00e0 riscontrate",
+    "Irregolarit\u00e0 riscontrate da Lazio Innova o altre autorit\u00e0 preposte",
+    "Altre violazioni di legge richiamate dall\u2019Avviso"
+  ],
+  "file_name": "ca36bdfd-7acb-4aa3-8520-93a3f99da024_DD_G08640_27_06_2024-bando_allegati.pdf",
+  "pagine_totali": null,
+  "data_processing": "2025-12-24T00:14:04.069974",
+  "fonte": null
+}

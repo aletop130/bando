@@ -1,0 +1,153 @@
+{
+  "id": "448888c3-4308-4117-9621-7e222dc6fb26",
+  "identificativo": "Avviso pubblico \u2013 A.R.I.A. \u2013 Azioni Regionali per la prevenzione Incendi e la tutela Ambientale",
+  "autorita": "Regione Lazio",
+  "soggetto_attuatore": "Lazio Innova S.p.A.",
+  "dotazione_finanziaria": 800000.0,
+  "regime_aiuto": "Contributo a fondo perduto",
+  "tematiche": [
+    "Sicurezza",
+    "Transizione ecologica",
+    "Sostenibilit\u00e0"
+  ],
+  "tipologie_fondo": [
+    "Nazionali"
+  ],
+  "tipologie_agevolazione": [
+    "A Fondo perduto"
+  ],
+  "destinatari": [
+    "Pubblica Amministrazione"
+  ],
+  "data_apertura_formulario": "2025-10-21T12:00:00",
+  "data_inizio_domande": "2025-11-04T12:00:00",
+  "data_fine_domande": "2026-02-10T17:00:00",
+  "piattaforma_presentazione": "GeCoWEB Plus",
+  "dimensioni_ammesse": [
+    "Avasca mobile per uso AIB: capacit\u00e0 min. 8000 litri; pescaggio min. 1,5 metri; diametro min. 3 metri",
+    "Container scarrabili per uso AIB: dimensioni approssimate 2,4 m x 6 m x 1,9 m",
+    "Adeguamento vasca di raccolta acque preesistente: pescaggio al centro di almeno 1,5 metri e diametro di almeno 3 metri"
+  ],
+  "requisiti_beneficiario": [
+    "Comuni Montani del Lazio come elencati nell\u2019Appendice 1",
+    "Disponibilit\u00e0 dell\u2019area in cui realizzare l\u2019Intervento",
+    "Disponibilit\u00e0 della relativa fonte di approvvigionamento idrico",
+    "Intervento realizzato nei limiti del Piano regionale AIB e delle prescrizioni tecniche dell\u2019Appendice 4",
+    "Non \u00e8 ammesso pi\u00f9 di un Intervento nello stesso Comune Montano"
+  ],
+  "sede_obbligatoria": "Lazio",
+  "attributi_bonus": [],
+  "tipologie_intervento": [
+    "A - Vasca mobile per uso AIB",
+    "B - Container scarrabile per uso AIB",
+    "C - Adeguamento funzionale di vasca di raccolta acque gi\u00e0 presente"
+  ],
+  "sottotipologie_cloud": [],
+  "importo_minimo_progetto": null,
+  "tempo_realizzazione_mesi": 18,
+  "esclusioni": [
+    "Interventi oggetto di altri contributi a fondo perduto",
+    "Interventi per i quali, alla Data della Domanda, siano gi\u00e0 state pubblicate le procedure per la selezione dei contraenti per lavori o forniture (eccezione servizi di progettazione)"
+  ],
+  "interventi": [
+    {
+      "tipo": "A",
+      "nome": "Vasca mobile per uso AIB",
+      "descrizione": "Acquisto e posa in opera di vasca mobile per uso AIB con capacit\u00e0 di almeno 8.000 litri, pescaggio di almeno 1,5 metri e diametro non inferiore a 3 metri; comprende l\u2019adeguamento delle aree di posizionamento e punti di presa dell\u2019acqua",
+      "restrizioni": [
+        "Costi ammissibili conformi all\u2019Appendice 4",
+        "Non ammissibile se oggetto di altri contributi a fondo perduto",
+        "Intervento realizzato nei Comuni Montani del Lazio",
+        "Intervento unico per Comune Montano"
+      ]
+    },
+    {
+      "tipo": "B",
+      "nome": "Container scarrabile per uso AIB",
+      "descrizione": "Acquisto e installazione di container scarrabili stagni nuovi per uso AIB, in acciaio S235JR; dimensioni circa 2,4 m (larghezza) x 6 m (lunghezza) x 1,9 m (altezza); comprendono l\u2019adeguamento delle aree tecniche di utilizzo",
+      "restrizioni": [
+        "Container nuovi e stagni in acciaio S235JR; rispettare caratteristiche riportate in Appendice 4",
+        "Realizzazione di aree tecniche di utilizzo adeguate"
+      ]
+    },
+    {
+      "tipo": "C",
+      "nome": "Adeguamento funzionale di vasca di raccolta acque gi\u00e0 presente",
+      "descrizione": "Adeguamento di vasche di raccolta acque preesistenti, posizionate in terra o fuori terra, di invasi naturali o serbatoi, per rifornimento idrico utile ad accelerare gli interventi di spegnimento; pescaggio centro almeno 1,5 metri e diametro minimo 3 metri",
+      "restrizioni": [
+        "Ripristino, manutenzione e/o realizzazione di sistema di adduzione dell\u2019acqua con portata adeguata",
+        "Sistemazione apparato scolmatore, svuotamento e pulizia invas o per ripristino funzionalit\u00e0",
+        "Adeguamenti dell\u2019area agli standard antincendio e norme di sicurezza elicotteri AIB",
+        "Presenza di idoneo sistema di adduzione e punti di presa ben evidenziati"
+      ]
+    }
+  ],
+  "natura_contributo": "Contributo a fondo perduto",
+  "importi_unitari": {},
+  "massimali_dimensione": {},
+  "incompatibilita_aiuti": true,
+  "criteri_selezione": [
+    {
+      "codice": "C1",
+      "nome": "Interventi riguardanti punti di attingimento distanti da quelli preesistenti",
+      "max_punti": 35,
+      "descrizione": "Sono attribuiti 35 punti se l\u2019ubicazione dell\u2019Intervento risulta distante 30 km o pi\u00f9 dal pi\u00f9 vicino punto di attingimento preesistente; 0 punti se distanza \u2264 5 km; interpolazione per distanze intermedie",
+      "formula": "distanza orizzontale misurata; interpolazione lineare per\u8dddanze intermedie"
+    },
+    {
+      "codice": "C2",
+      "nome": "Ubicazione in un Comune ad elevata estensione di Aree Percorse dal Fuoco (APF)",
+      "max_punti": 20,
+      "descrizione": "Punteggio basato sull\u2019APF per ogni Comune Montano del Lazio (Appendice 5) secondo dati 2010-2024",
+      "formula": "basato sull\u2019Appendice 5 per ogni Comune Montano del Lazio"
+    },
+    {
+      "codice": "C3",
+      "nome": "Stato di avanzamento della progettazione",
+      "max_punti": 15,
+      "descrizione": "15 punti in caso di livello di progettazione esecutiva; 0 punti in caso contrario",
+      "formula": "punti assegnati in base al livello di progettazione esecutiva"
+    },
+    {
+      "codice": "C4",
+      "nome": "Intervento funzionale alla salvaguardia degli habitat naturali",
+      "max_punti": 10,
+      "descrizione": "10 punti se l\u2019Intervento \u00e8 ubicato in aree protette o entro 5 km dai confini di aree naturalistiche rilevanti (aree protette, Natura 2000, foreste demaniali o pregiate)",
+      "formula": "criteri di selezione basati su aree protette, Natura 2000 o foreste rilevanti"
+    }
+  ],
+  "criterio_tiebreak": "In caso di parit\u00e0 di punteggio, prevale il soggetto con il miglior punteggio relativo al primo criterio di selezione",
+  "allegati_obbligatori": [
+    "Proposta progettuale conforme allo schema Modello 1 e relativi elaborati",
+    "Deliberazione della giunta autorizzante la candidatura e impegno a realizzarlo",
+    "Documentazione attestante incarico RUP (se presente)",
+    "Relazione di verifica e validazione del progetto (art. 42 e allegato I.7 del D.Lgs. 36/2023) se progettazione esecutiva",
+    "Ulteriore documentazione utile per analisi e verifiche (Appendice 4)"
+  ],
+  "piattaforma_invio": "GeCoWEB Plus",
+  "regola_senza_soccorso": false,
+  "ordine_istruttoria": null,
+  "modalita_erogazione": "Anticipo facoltativo del 20% a seguito della sottoscrizione dell\u2019Atto di Impegno; SAL facoltativo del 60% entro 12 mesi dalla Concessione; saldo entro 18 mesi dalla Concessione o eventuale termine prorogato; erogazioni adeguate al Quadro Economico aggiornato",
+  "documenti_erogazione": [
+    "Quadro Economico aggiornato",
+    "Contratti di appalto e forniture, verbale di consegna",
+    "Autorizzazioni ambientali, nulla osta o atti di assenso necessari",
+    "Quadro Economico rideterminato",
+    "Relazione del RUP sull\u2019intervento realizzato",
+    "Documentazione di collaudo o certificato di regolare esecuzione",
+    "Documento attestante definizione ed approvazione della spesa effettivamente sostenuta",
+    "Documentazione costi sostenuti (fatture, parcelle o equivalenti)"
+  ],
+  "condizioni_revoca": [
+    "mancata trasmissione dell\u2019Atto di Impegno sottoscritto e relativa documentazione entro i termini previsti",
+    "mancata presentazione della richiesta di erogazione di saldo entro i termini e modalit\u00e0 previste",
+    "Intervento gravemente difforme da quello approvato (articolo 6)",
+    "Beneficiario non consenta controlli/ verifiche o documenti irregolari/incompleti",
+    "altre violazioni di legge e delle norme previste dall\u2019Avviso",
+    "mancato rispetto degli obblighi previsti dall\u2019Avviso"
+  ],
+  "file_name": "4597bbc7-ecea-468f-923f-421b9f898fd6_DD_G13233_13_10_2025_Bando.pdf",
+  "pagine_totali": null,
+  "data_processing": "2025-12-24T00:14:32.814110",
+  "fonte": null
+}

@@ -1,0 +1,206 @@
+{
+  "id": "d8f420b1-b64f-41f9-a3d7-64e018e164fc",
+  "identificativo": "AVVISO PUBBLICO INVESTIMENTI STRATEGICI PMI",
+  "autorita": "Regione Lazio - Autorit\u00e0 di Gestione Programma FESR Lazio 2021-2027",
+  "soggetto_attuatore": "Lazio Innova S.p.A.",
+  "dotazione_finanziaria": 40000000.0,
+  "regime_aiuto": "Contributo a fondo perduto; De Minimis disponibile",
+  "tematiche": [
+    "Innovazione",
+    "Transizione ecologica",
+    "Sostenibilit\u00e0"
+  ],
+  "tipologie_fondo": [
+    "Europei"
+  ],
+  "tipologie_agevolazione": [
+    "A Fondo perduto",
+    "De Minimis"
+  ],
+  "destinatari": [
+    "PMI"
+  ],
+  "data_apertura_formulario": "2025-07-02",
+  "data_inizio_domande": "2025-07-17T12:00:00",
+  "data_fine_domande": "2026-03-05T17:00:00",
+  "piattaforma_presentazione": "GeCoWEB Plus",
+  "dimensioni_ammesse": [
+    "PMI"
+  ],
+  "requisiti_beneficiario": [
+    "PMI",
+    "Non essere Impresa in Difficolt\u00e0",
+    "Iscritta al Registro delle Imprese Italiano",
+    "Unit\u00e0 Produttiva ubicata nel Lazio",
+    "Polizza assicurativa prescritta dall\u2019art. 1, commi 101-111 della legge 213/2023"
+  ],
+  "sede_obbligatoria": "Lazio",
+  "attributi_bonus": [
+    "Economia a basse emissioni di carbonio, resilienza e adattamento ai cambiamenti climatici / economia circolare",
+    "Certificazione di parit\u00e0 di genere",
+    "Certificazione ambientale"
+  ],
+  "tipologie_intervento": [
+    "Investimenti",
+    "Attivit\u00e0 di Formazione",
+    "Consulenze e Servizi",
+    "Premio per la Fideiussione"
+  ],
+  "sottotipologie_cloud": [],
+  "importo_minimo_progetto": 500000.0,
+  "tempo_realizzazione_mesi": 18,
+  "esclusioni": [
+    "Investimenti non ammissibili: creazione di una nuova Unit\u00e0 Produttiva",
+    "Costi per la semplice sostituzione di beni esistenti non ammissibili",
+    "Nel caso di investimenti in parte sostitutivi, la quota attribuibile oggettivamente a una Tipologia di Investimento",
+    "Diversificazione di Unit\u00e0 Produttive (Zona Assistite Plus o Ordinarie) deve essere almeno 300% del valore contabile delle immobilizzazioni riutilizzate",
+    "Costi ancillari non cumulabili superiori al 25% dei Costi Ammissibili degli Investimenti A",
+    "Le attivit\u00e0 ancillari devono avviare i lavori dopo la Data della Domanda",
+    "Progetti esclusi: coerenti con Reg. UE 2024/795 ( STEP Lazio )",
+    "Costi non ammessi elencati all'articolo 4 (es. costi autoprodotti, Parti Correlate, beni usati, leasing, contratti chiavi in mano, costi inferiori a 500 euro, IVA non detraibile in alcuni casi, interessi passivi ecc.)"
+  ],
+  "interventi": [
+    {
+      "tipo": "A",
+      "nome": "A.1 Acquisti di impianti specifici, macchinari, attrezzature",
+      "descrizione": "Acquisti di impianti specifici, macchinari, attrezzature e altro Investimento materiale imputabile alle Tipologie di Investimento di cui all'articolo 1",
+      "restrizioni": []
+    },
+    {
+      "tipo": "A",
+      "nome": "A.2 Acquisti di beni immateriali e software",
+      "descrizione": "Acquisti di beni immateriali quali diritti di brevetto, licenze, know-how o altre forme di propriet\u00e0 intellettuale utili all\u2019Unit\u00e0 Produttiva e legate ad essa per almeno 3 anni",
+      "restrizioni": []
+    },
+    {
+      "tipo": "A",
+      "nome": "A.3 Acquisti di terreni",
+      "descrizione": "Acquisti di terreni e relative sistemazioni non oltre il 10% dei Costi Ammissibili A1/A4",
+      "restrizioni": []
+    },
+    {
+      "tipo": "A",
+      "nome": "A.4 Acquisti di fabbricati e opere murarie",
+      "descrizione": "Spese per opere murarie e impianti civili con due sottovoci: A.4.1 unit\u00e0 immobiliari esistenti; A.4.2 lavori edili e impianti civili",
+      "restrizioni": []
+    },
+    {
+      "tipo": "A",
+      "nome": "A.5 Progettazione e spese tecniche",
+      "descrizione": "Spese per progettazione e altre spese tecniche funzionali, inclusa verifica climatica",
+      "restrizioni": []
+    },
+    {
+      "tipo": "A",
+      "nome": "A.6 Canoni SaaS/IaaS/Paas",
+      "descrizione": "Canoni per connettivit\u00e0 e software in modalit\u00e0 \u201cas a service\u201d",
+      "restrizioni": []
+    },
+    {
+      "tipo": "B",
+      "nome": "B.1 Formazione",
+      "descrizione": "Costi di formazione rimborsabili all\u2019organizzazione responsabile della formazione",
+      "restrizioni": []
+    },
+    {
+      "tipo": "C",
+      "nome": "C.1 Consulenze e Servizi",
+      "descrizione": "Costi per consulenze industrializzazione e prima commercializzazione; C.1.1 tempo uomo; C.1.2 costo a corpo",
+      "restrizioni": []
+    },
+    {
+      "tipo": "C",
+      "nome": "C.2 Situazione contabile per imprese non soggette al deposito bilancio",
+      "descrizione": "Relazione contabile da professionista iscritto; fino a 700 euro",
+      "restrizioni": []
+    },
+    {
+      "tipo": "D",
+      "nome": "D Premo Fideiussione",
+      "descrizione": "Premio per la Fideiussione a garanzia dell\u2019anticipo obbligatorio",
+      "restrizioni": []
+    }
+  ],
+  "natura_contributo": "Contributo a fondo perduto",
+  "importi_unitari": {},
+  "massimali_dimensione": {},
+  "incompatibilita_aiuti": false,
+  "criteri_selezione": [
+    {
+      "codice": "C1",
+      "nome": "Sostenibilit\u00e0 economico-finanziaria",
+      "max_punti": 50,
+      "descrizione": "Sostenibilit\u00e0 economico-finanziaria del progetto (economicit\u00e0 e risorse disponibili)",
+      "formula": null
+    },
+    {
+      "codice": "C2",
+      "nome": "Qualit\u00e0 progettuale",
+      "max_punti": 30,
+      "descrizione": "Qualit\u00e0 progettuale in termini di obiettivi, metodologia e attuazione",
+      "formula": null
+    },
+    {
+      "codice": "P1",
+      "nome": "Economia a basse emissioni / economia circolare",
+      "max_punti": 10,
+      "descrizione": "Progetti focalizzati su economie a basse emissioni di carbonio, resilienza e adattamento ai cambiamenti climatici / economia circolare",
+      "formula": null
+    },
+    {
+      "codice": "P2",
+      "nome": "Certificazione di parit\u00e0 di genere",
+      "max_punti": 5,
+      "descrizione": "Possesso della certificazione di parit\u00e0 di genere",
+      "formula": null
+    },
+    {
+      "codice": "P3",
+      "nome": "Certificazione ambientale",
+      "max_punti": 5,
+      "descrizione": "Possesso di certificazione ambientale",
+      "formula": null
+    }
+  ],
+  "criterio_tiebreak": null,
+  "allegati_obbligatori": [
+    "Proposte progettuali modello 1 (Investimenti) e modello 2 (Formazione)",
+    "Dichiarazione DNSH (modello 3)",
+    "Relazione verifica climatica",
+    "Documentazione tecnica a supporto della valutazione costi (preventivi, perizie, contratti, Titoli di Spesa, CUP)",
+    "Dichiarazioni modelli 5, 6 e 7",
+    "Situazione contabile riclassificata (per imprese non soggette a deposito bilancio) se previsto",
+    "Dichiarazione IVA indetraibilit\u00e0 (modello 5) se necessario",
+    "Altre dichiarazioni e documenti utili ai fini delle verifiche (modelli 6 e 7, revisore legale/revisore estero se presente)"
+  ],
+  "piattaforma_invio": "GeCoWEB Plus",
+  "regola_senza_soccorso": false,
+  "ordine_istruttoria": "Sportello (ordine cronologico di presentazione delle Domande)",
+  "modalita_erogazione": "Anticipo obbligatorio (40%); SAL in acconto; saldo finale",
+  "documenti_erogazione": [
+    "Relazione sullo stato di attuazione del Progetto e obiettivi raggiunti",
+    "Fideiussione per anticipo",
+    "Documentazione comprovante costi sostenuti (fatture, CUP, estratti conti)",
+    "Relazioni per SAL e saldo con avanzamento e risultati",
+    "Documentazione di integrazione/regolarizzazione richiesta da Lazio Innova"
+  ],
+  "condizioni_revoca": [
+    "Mancata trasmissione delle informazioni necessarie (Disciplina Antimafia, Atto di Impegno, documentazione a corredo)",
+    "Mancato rispetto del possesso, acquisizione e mantenimento dei requisiti (articolo 2)",
+    "Dichiarazioni mendaci ai sensi del DPR 445/2000",
+    "Mancata presentazione delle richieste di erogazione entro i termini",
+    "Commissione di Valutazione ritenga che il Progetto sia gravemente difforme",
+    "Insubordinazione ai controlli o documentazione irregolare",
+    "Delocalizzazione Lazio entro 5 anni dall\u2019erogazione del saldo",
+    "Delocalizzazione UE entro 10 anni dall\u2019erogazione del saldo",
+    "Cessazione attivit\u00e0 entro 5 anni salvo fallimento non fraudolento",
+    "Alienazione/trasferimento di Investimenti materiali entro 3 anni (salvo sostituzione)",
+    "Investimenti immateriali non utili esclusiva della Unit\u00e0 Produttiva per 3 anni",
+    "Ordine di recupero pendente (Clausola Deggendorf)",
+    "Irregolarit\u00e0 accertate o altre violazioni di legge"
+  ],
+  "file_name": "d43f6424-6a80-4e21-b819-a4d2ee490c55_DD_G08250_27_06_2025_Bando.pdf",
+  "pagine_totali": null,
+  "data_processing": "2025-12-24T00:14:38.520330",
+  "fonte": null
+}

@@ -1,0 +1,149 @@
+{
+  "id": "ffbf8d0f-bbf1-4ed1-af0e-fa149a311bd2",
+  "identificativo": "Investimenti \u2013 Linea Impresa Efficiente",
+  "autorita": "Regione Lombardia",
+  "soggetto_attuatore": "Finlombarda S.p.A",
+  "dotazione_finanziaria": 43232662.12,
+  "regime_aiuto": "GBER e de minimis",
+  "tematiche": [
+    "Transizione ecologica",
+    "Sostenibilit\u00e0"
+  ],
+  "tipologie_fondo": [
+    "Regional",
+    "Europei"
+  ],
+  "tipologie_agevolazione": [
+    "A Fondo perduto",
+    "Garanzie"
+  ],
+  "destinatari": [
+    "PMI",
+    "Piccole imprese",
+    "Medie imprese",
+    "Micro-imprese"
+  ],
+  "data_apertura_formulario": "2025-09-16T10:30:00",
+  "data_inizio_domande": "2025-09-16T10:30:00",
+  "data_fine_domande": null,
+  "piattaforma_presentazione": "https://www.bandi.regione.lombardia.it",
+  "dimensioni_ammesse": [
+    "Micro e piccole imprese",
+    "Medie imprese"
+  ],
+  "requisiti_beneficiario": [
+    "PMI regolarmente costituite, iscritte e attive nel Registro delle Imprese con almeno due bilanci depositati (oppure due dichiarazioni fiscali) alla data di presentazione",
+    "Sede operativa nella quale realizzare il Progetto in Lombardia",
+    "Classificazione da 1 a 10 secondo la metodologia di Credit Scoring del Fondo Centrale di Garanzia (DGR 7269/2022)",
+    "Regolare con DURC (se applicabile)",
+    "Non afferire ai settori esclusi (Agricoltura salvo eccezioni, Attivit\u00e0 finanziarie/assicurative, tabacco, ecc.)",
+    "In regola rispetto alla verifica della regolarit\u00e0 contributiva e antimafia",
+    "In caso di applicazione del Regolamento de minimis, non insolvenza e non esclusioni specifiche",
+    "Non essere oggetto di esclusioni ulteriori indicate nel bando"
+  ],
+  "sede_obbligatoria": "Lombardia",
+  "attributi_bonus": [
+    "DNSH (Do No Significant Harm)",
+    "Premialit\u00e0 correlata al recupero di materiali e riduzione rifiuti"
+  ],
+  "tipologie_intervento": [
+    "Adeguamento e/o rinnovo degli impianti produttivi",
+    "Interventi finalizzati all\u2019efficientamento energetico",
+    "Eventuale ricorso a energie rinnovabili"
+  ],
+  "sottotipologie_cloud": [],
+  "importo_minimo_progetto": 100000.0,
+  "tempo_realizzazione_mesi": 18,
+  "esclusioni": [
+    "Smantellamento o costruzione di centrali nucleari",
+    "Investimenti volti a ridurre emissioni di gas a effetto serra in attivit\u00e0 coperte dall\u2019Allegato I della Direttiva 2003/87/CE",
+    "Fabbricazione, trasformazione e commercializzazione del tabacco",
+    "Investimenti in infrastrutture aeroportuali",
+    "Investimenti in attivit\u00e0 di smaltimento dei rifiuti in discariche (eccetto dismissione, riconversione o messa in sicurezza esistenti)",
+    "Investimenti destinati ad aumentare la capacit\u00e0 degli impianti di trattamento dei rifiuti residui (eccetto recupero),",
+    "Investimenti legati alla produzione, trasformazione, trasporto, distribuzione, stoccaggio o combustione di combustibili fossili (eccetto sostituzione di caldaie a gas e impianti di cogenerazione ad alto rendimento; ammodernamento reti teleriscaldamento/teleraffreddamento)",
+    "Investimenti relativi all'espansione o cambio di destinazione delle reti di trasporto e distribuzione del gas tese all\u2019introduzione di gas rinnovabili",
+    "Progetti relativi a gioco d\u2019azzardo e pornografia",
+    "Verifica climatica ai sensi dell\u2019art. 73 par. 2 j) del Regolamento (UE) n. 2021/1060 non applicabile a determinate opere"
+  ],
+  "interventi": [
+    {
+      "tipo": "Intervento di valorizzazione energetica",
+      "nome": "Sostegno all\u2019efficientamento energetico degli edifici e/o impianti produttivi",
+      "descrizione": "Interventi di adeguamento e/o rinnovo degli impianti produttivi finalizzati alla riduzione dell\u2019impatto ambientale, con eventuale ricorso a energie rinnovabili, per una riduzione delle emissioni climalteranti di almeno il 30% rispetto alle condizioni ex ante.",
+      "restrizioni": []
+    }
+  ],
+  "natura_contributo": "Contributo",
+  "importi_unitari": {},
+  "massimali_dimensione": {},
+  "incompatibilita_aiuti": true,
+  "criteri_selezione": [
+    {
+      "codice": "C1",
+      "nome": "Qualit\u00e0 dell\u2019operazione",
+      "max_punti": 30,
+      "descrizione": "Coerenza degli obiettivi del Progetto con gli obiettivi del Programma FESR e dell\u2019avviso attuativo",
+      "formula": null
+    },
+    {
+      "codice": "C2",
+      "nome": "Coerenza dei costi e dei tempi di realizzazione",
+      "max_punti": 20,
+      "descrizione": "Coerenza dei costi e coerenza dei tempi di realizzazione",
+      "formula": null
+    },
+    {
+      "codice": "C3",
+      "nome": "Sostenibilit\u00e0 dell\u2019operazione",
+      "max_punti": 45,
+      "descrizione": "Capacit\u00e0 di generare effetti in termini di riduzione dei consumi energetici e di recupero di energia/cattura gas serra; integrazione FER e accumulo nonch\u00e9 autoconsumo",
+      "formula": null
+    },
+    {
+      "codice": "C4",
+      "nome": "Integrazione FER e capacit\u00e0 di accumulo",
+      "max_punti": 10,
+      "descrizione": "Integrazione di impianti FER e capacit\u00e0 di accumulo",
+      "formula": null
+    },
+    {
+      "codice": "C5",
+      "nome": "Miglioramento autoconsumo",
+      "max_punti": 20,
+      "descrizione": "Determinano aumento dell\u2019autoconsumo e autosufficienza energetica",
+      "formula": null
+    }
+  ],
+  "criterio_tiebreak": null,
+  "allegati_obbligatori": [
+    "Allegato D.13.a \u2013 Informativa per il trattamento dei dati personali",
+    "Allegato D.13.b \u2013 Schema di attestazione di delibera bancaria",
+    "Allegato D.13.c \u2013 Criteri per la rendicontazione delle spese",
+    "Allegato D.13.e \u2013 Requisiti per le caldaie a biomassa"
+  ],
+  "piattaforma_invio": "Bandi e Servizi (www.bandi.regione.lombardia.it)",
+  "regola_senza_soccorso": false,
+  "ordine_istruttoria": "Procedura a sportello; verifica formale, valutazione tecnica",
+  "modalita_erogazione": "Garanzia regionale gratuita a favore dei Soggetti finanziatori e Contributo a saldo a favore del Soggetto beneficiario",
+  "documenti_erogazione": [
+    "Decreto di concessione",
+    "Lettera di Garanzia",
+    "DURC in corso di validit\u00e0",
+    "Verifica antimafia (se applicabile)",
+    "Diagnosi energetica post-Progetto",
+    " Rendicontazione spese e richiesta di erogazione"
+  ],
+  "condizioni_revoca": [
+    "Mancato rispetto degli obblighi generali",
+    "Non approvazione di variazione societaria",
+    "Rinuncia all\u2019Agevolazione",
+    "False dichiarazioni rese e sottoscritte",
+    "Risoluzione del Contratto di Finanziamento",
+    "Recupero somme erogate"
+  ],
+  "file_name": "4a829435-70fd-446a-9670-2db38997efa7_Allegato A al decreto n. 9923 del 11 luglio 2025 - Avviso della misura _Investimenti - Linea impresa efficiente_.pdf",
+  "pagine_totali": null,
+  "data_processing": "2025-12-24T00:20:15.939197",
+  "fonte": null
+}

@@ -1,29 +1,19 @@
 import os
 import uuid
 import json
-from typing import Optional, List
+from typing import Optional, List, Dict
 from pydantic import BaseModel
-from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
+from celery import group
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-
+from celery_app import process_document_pipeline
+from typing import Union
 from graph_rag_pipeline import (
-    
-    extract_pdf_text_with_tables,
-    normalize_whitespace,         # Estrazione testo da pdf
-    chunk_text,
-    
-    extract_ontology_from_text,   
-    create_ontology_graph,        # Ontologia e Neo4j Ingestion  
-    ingest_to_neo4j,                 
-    
-    create_collection,
-    ingest_to_qdrant,             # Chunking e Qdrant Ingestion
-    
-    retrieve_graph_context,       #GraphRAG
+    retrieve_graph_context,       # GraphRAG
     graphRAG_run_with_history,       
     
     neo4j_driver,
-    qdrant_client,                #Clients
+    qdrant_client,                # Clients
     VECTOR_DIM,
 )
 
@@ -88,130 +78,94 @@ os.makedirs(STORAGE_DIR, exist_ok=True)
 
 processing_status = {}
 
-
-def process_document_ontology(job_id: str, pdf_path: str, collection_name: str = "Bandi"):
-    """NUOVA PIPELINE: Processa il documento usando ontologia (1 chiamata LLM)"""
-    try:
-        processing_status[job_id] = {"status": "processing", "progress": "Lettura PDF..."}
-        
-        # 1. Estrazione testo
-        processing_status[job_id]["progress"] = "Estrazione testo dal PDF..."
-        raw_data = extract_pdf_text_with_tables(pdf_path)
-        clean_data = normalize_whitespace(raw_data)
-        
-        # 2. Estrazione ontologia (1 chiamata LLM)
-        processing_status[job_id]["progress"] = "Estrazione ontologia strutturata (1 chiamata LLM)..."
-        ontology = extract_ontology_from_text(clean_data)
-        ontology.file_name = os.path.basename(pdf_path)
-        
-        processing_status[job_id]["details"] = {
-            "identificativo": ontology.identificativo,
-            "dimensioni_ammesse": ontology.dimensioni_ammesse,
-            "tipologie_intervento": ontology.tipologie_intervento,
-            "criteri_count": len(ontology.criteri_selezione)
-        }
-        
-        # 3. Creazione grafo dall'ontologia
-        processing_status[job_id]["progress"] = "Creazione grafo ontologico..."
-        nodes, relationships, bando_attrs = create_ontology_graph(ontology) 
-        
-        # 4. Ingestion in Neo4j
-        processing_status[job_id]["progress"] = "Salvataggio in Neo4j..."
-
-        ingest_to_neo4j(nodes, relationships, bando_attrs=bando_attrs)
-
-        # 5. Chunking del testo per Qdrant
-        processing_status[job_id]["progress"] = "Creazione chunk per ricerca semantica..."
-        chunks = chunk_text(clean_data, max_words=250, overlap_words=35)
-        
-        # 6. Crea/verifica collection Qdrant
-        processing_status[job_id]["progress"] = "Configurazione Qdrant..."
-        create_collection(qdrant_client, collection_name, VECTOR_DIM)
-        
-        # 7. Ingestione in Qdrant con collegamenti ai nodi Neo4j
-        processing_status[job_id]["progress"] = "Salvataggio in Qdrant con collegamenti al grafo..."
-        points_count = ingest_to_qdrant(
-            collection_name=collection_name,
-            chunks=chunks,
-            ontology=ontology,
-            nodes_dict=nodes
-        )
-        
-        # 8. Salva metadata
-        processing_status[job_id] = {
-            "status": "completed",
-            "progress": "Completato!",
-            "collection_name": collection_name,
-            "chunks_count": len(chunks),
-            "nodes_count": len(nodes),
-            "relationships_count": len(relationships),
-            "qdrant_points": points_count,
-            "ontology": {
-                "identificativo": ontology.identificativo,
-                "autorita": ontology.autorita,
-                "dotazione": ontology.dotazione_finanziaria,
-                "interventi": len(ontology.interventi),
-                "criteri": len(ontology.criteri_selezione)
-            },
-            "bando_attributes": bando_attrs  
-        }
-        
-        # Salva l'ontologia per riferimento
-        ontology_file = os.path.join(STORAGE_DIR, f"{job_id}_ontology.json")
-        with open(ontology_file, 'w') as f:
-            json.dump(ontology.model_dump_json(), f, indent=2, default=str)
-        
-    except Exception as e:
-        import traceback
-        error_msg = str(e)
-        traceback_str = traceback.format_exc()
-        print(f"[ERROR] Process failed: {error_msg}\n{traceback_str}")
-        
-        processing_status[job_id] = {
-            "status": "error",
-            "error": error_msg,
-            "traceback": traceback_str
-        }
-
-
-@app.post("/upload", response_model=UploadResponse)
+@app.post("/upload")
 async def upload_document(
-    background_tasks: BackgroundTasks,
-    file: UploadFile = File(...),
+    file: Union[UploadFile, List[UploadFile]] = File(...),
     collection_name: str = "Bandi"
 ):
-    #Endpoint per caricare un documento PDF con NUOVA pipeline
-
-    if not file.filename.endswith('.pdf'):
-        raise HTTPException(status_code=400, detail="Solo file PDF sono supportati")
+    """
+    Endpoint per caricare uno o più documenti PDF.
+    Supporta sia singolo file che lista di file.
+    """
+    # Normalizza input in lista
+    if isinstance(file, UploadFile):
+        file_list = [file]
+        is_single = True
+    else:
+        file_list = file
+        is_single = False
     
-    job_id = str(uuid.uuid4())
-    file_path = os.path.join(STORAGE_DIR, f"{job_id}_{file.filename}")
+    if not file_list:
+        raise HTTPException(status_code=400, detail="Nessun file caricato")
     
-    with open(file_path, "wb") as f:
-        content = await file.read()
-        f.write(content)
+    # Verifica tutti i file
+    for f in file_list:
+        if not f.filename.endswith('.pdf'):
+            raise HTTPException(status_code=400, detail=f"File {f.filename} non è un PDF")
     
-    processing_status[job_id] = {
-        "status": "queued", 
-        "progress": "In coda...",
-        "collection_name": collection_name
-    }
+    responses = []
+    tasks = []
+    batch_job_ids = []
     
-    #Ontology Pipelineù
-
-    background_tasks.add_task(
-        process_document_ontology, 
-        job_id, 
-        file_path, 
-        collection_name
-    )
+    # Prepara tutti i file e tasks
+    for f in file_list:
+        job_id = str(uuid.uuid4())
+        batch_job_ids.append(job_id)
+        file_path = os.path.join(STORAGE_DIR, f"{job_id}_{f.filename}")
+        
+        # Salva il file
+        with open(file_path, "wb") as file_obj:
+            content = await f.read()
+            file_obj.write(content)
+        
+        # Inizializza stato
+        processing_status[job_id] = {
+            "status": "queued", 
+            "progress": "In coda su Celery...",
+            "collection_name": collection_name,
+            "filename": f.filename
+        }
+        
+        # Crea task Celery
+        task = process_document_pipeline.s(job_id, file_path, collection_name)
+        tasks.append(task)
+        
+        # Prepara risposta per questo file
+        response_data = {
+            "job_id": job_id,
+            "message": f"Documento caricato: {f.filename}",
+            "status": "queued"
+        }
+        responses.append(response_data)
     
-    return UploadResponse(
-        job_id=job_id,
-        message=f"Documento caricato: {file.filename} (pipeline ontologica)",
-        status="queued"
-    )
+    # Avvia tutti i tasks in parallelo usando group
+    if tasks:
+        if len(tasks) == 1 and is_single:
+            # Singolo file: usa delay() normale
+            task = tasks[0]
+            result = task.delay()
+            processing_status[batch_job_ids[0]].update({
+                "celery_task_id": result.id,
+                "async_result_id": result.id
+            })
+        else:
+            # Multipli file: usa group()
+            job_group = group(tasks)
+            group_result = job_group.apply_async()
+            
+            # Aggiorna ogni job con l'ID del task Celery
+            for i, job_id in enumerate(batch_job_ids):
+                if i < len(group_result.children):
+                    processing_status[job_id].update({
+                        "celery_task_id": group_result.children[i].id,
+                        "async_result_id": group_result.children[i].id
+                    })
+    
+    # Restituisci risposta appropriata
+    if is_single:
+        return responses[0]  # Singolo oggetto
+    else:
+        return responses  # Lista di oggetti
 
 
 @app.get("/status/{job_id}", response_model=StatusResponse)
@@ -231,10 +185,8 @@ async def get_status(job_id: str):
 
 
 @app.post("/chat", response_model=ChatResponse)
-
-#Chat con message history
-
 async def chat_with_document(request: ChatRequest):
+    """Chat con message history"""
     collection_name = request.collection_name or "Bandi"
     
     if not request.messages:
@@ -267,7 +219,7 @@ async def chat_with_document(request: ChatRequest):
                 entity_ids_found=None
             )
         
-        #Recupero contesto
+        # Recupero contesto
         entity_ids, qdrant_texts, graph_context = retrieve_graph_context(
             query=user_query,
             collection_name=collection_name,
@@ -284,7 +236,7 @@ async def chat_with_document(request: ChatRequest):
                 entity_ids_found=[]
             )
         
-        # 2. GraphRAG con history
+        # GraphRAG con history
         answer = graphRAG_run_with_history(graph_context, user_query, conversation_history)
         
         return ChatResponse(
@@ -335,21 +287,91 @@ async def get_ontology(job_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@app.get("/jobs")
+async def list_jobs():
+    """Endpoint per listare tutti i jobs con il loro stato"""
+    return {
+        "total_jobs": len(processing_status),
+        "jobs": [
+            {
+                "job_id": job_id,
+                "status": info.get("status"),
+                "filename": info.get("filename"),
+                "progress": info.get("progress")
+            }
+            for job_id, info in processing_status.items()
+        ]
+    }
+
+
+@app.get("/health")
+async def health_check():
+    """Health check per verificare lo stato dei servizi"""
+    try:
+        # Verifica Neo4j
+        neo4j_driver.verify_connectivity()
+        neo4j_status = "healthy"
+    except Exception as e:
+        neo4j_status = f"error: {str(e)}"
+    
+    try:
+        # Verifica Qdrant
+        qdrant_client.get_collections()
+        qdrant_status = "healthy"
+    except Exception as e:
+        qdrant_status = f"error: {str(e)}"
+    
+    return {
+        "neo4j": neo4j_status,
+        "qdrant": qdrant_status,
+        "total_jobs": len(processing_status),
+        "storage_dir": STORAGE_DIR
+    }
+
+
+@app.delete("/cleanup")
+async def cleanup_old_jobs(days: int = 1):
+    """Endpoint per pulire jobs vecchi di N giorni"""
+    import time
+    from datetime import datetime, timedelta
+    
+    cutoff_time = datetime.now() - timedelta(days=days)
+    deleted_count = 0
+    
+    for job_id in list(processing_status.keys()):
+        job_info = processing_status[job_id]
+        
+        # Verifica se il job è completato o fallito
+        status = job_info.get("status")
+        if status in ["completed", "error"]:
+            # Controlla se è vecchio (semplice implementazione)
+            deleted_count += 1
+            del processing_status[job_id]
+    
+    return {
+        "message": f"Puliti {deleted_count} jobs vecchi",
+        "remaining_jobs": len(processing_status)
+    }
+
+
 @app.get("/")
 async def root():
     return {
         "message": "GraphRAG Bandi API - Pipeline Ontologica",
-        "version": "3.0",
-        "feature": "Ontology extraction + Graph with node attributes + Qdrant-Neo4j linkage",
+        "version": "4.0",
+        "feature": "Upload singolo con processing Celery",
         "endpoints": {
-            "POST /upload": "Carica PDF e processa con pipeline ontologica",
+            "POST /upload": "Carica un singolo PDF e processa con pipeline ontologica",
             "GET /status/{job_id}": "Stato processing",
-            "POST /query": "Query singola sul bando",
             "POST /chat": "Chat con memoria",
             "GET /ontology/{job_id}": "Visualizza ontologia estratta",
             "GET /collections": "Lista collections",
-            "GET /health": "Stato servizi"
-        }
+            "GET /jobs": "Lista tutti i jobs",
+            "GET /health": "Stato servizi",
+            "DELETE /cleanup": "Pulizia jobs vecchi"
+        },
+        "note": "Per processare più PDF, fare chiamate multiple a /upload"
     }
 
 

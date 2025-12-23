@@ -1,0 +1,216 @@
+{
+  "id": "f4884934-0d46-4f82-a03e-658c064a8afa",
+  "identificativo": "STEP Lazio \u2013 Avviso STEP Lazio Tecnologie Critiche e Azioni di Rafforzamento delle Competenze / Tecnologie Pulite ed Efficienti",
+  "autorita": "Regione Lazio - Lazio Innova",
+  "soggetto_attuatore": "Lazio Innova",
+  "dotazione_finanziaria": 70000000.0,
+  "regime_aiuto": "Contributo a fondo perduto",
+  "tematiche": [
+    "Innovazione",
+    "ICT",
+    "Transizione ecologica",
+    "Sostenibilit\u00e0"
+  ],
+  "tipologie_fondo": [
+    "Europei",
+    "Regional"
+  ],
+  "tipologie_agevolazione": [
+    "A Fondo perduto",
+    "Premi in denaro e servizi"
+  ],
+  "destinatari": [
+    "Imprese",
+    "Ricercatori",
+    "Universit\u00e0 e ricerca"
+  ],
+  "data_apertura_formulario": "2025-07-02T12:00:00",
+  "data_inizio_domande": "2025-07-17T12:00:00",
+  "data_fine_domande": "2026-03-05T17:00:00",
+  "piattaforma_presentazione": "GeCoWEB Plus",
+  "dimensioni_ammesse": [
+    "Micro-imprese",
+    "Piccole Imprese",
+    "Medie Imprese",
+    "Grandi Imprese"
+  ],
+  "requisiti_beneficiario": [
+    "Iscritto al Registro delle Imprese Italiano",
+    "Unit\u00e0 Produttiva ubicata nel Lazio e risultante al Registro delle Imprese Italiano",
+    "Non risultare un\u2019Impresa in Difficolt\u00e0",
+    "Polizza assicurativa prescritta dall\u2019art. 1, commi 101-111 della legge 213/2023, contratta entro i termini prescritti e in corso di validit\u00e0 fino alla erogazione del saldo"
+  ],
+  "sede_obbligatoria": "Lazio",
+  "attributi_bonus": [
+    "Certificazione di Parit\u00e0 di Genere",
+    "Certificazione di Sostenibilit\u00e0 Ambientale"
+  ],
+  "tipologie_intervento": [
+    "Investimenti (A)",
+    "Attivit\u00e0 di Sviluppo Sperimentale (B)",
+    "Attivit\u00e0 di Formazione (C)",
+    "Consulenze e Servizi (D)",
+    "Premio per la Fideiussione (E)"
+  ],
+  "sottotipologie_cloud": [],
+  "importo_minimo_progetto": 3000000.0,
+  "tempo_realizzazione_mesi": 24,
+  "esclusioni": [
+    "Attivit\u00e0 Economiche del settore finanziario e assicurativo (Sez. L ATECO 2025)",
+    "Investimenti esclusi dall\u2019art. 7 del RDC: produzione primaria di prodotti agricoli e pesca/acquacoltura",
+    "Attivit\u00e0 Economiche escluse dall\u2019art. 13 del RDC: carbone, banda larga, siderurgia, lignite, trasporti, produzione, stoccaggio, trasmissione o distribuzione di energia",
+    "Investimenti esclusi dall\u2019art. 7 Reg UE 2021/058: fabbricazione, trasformazione e commercializzazione del tabacco",
+    "Smantellamento o costruzione di centrali nucleari",
+    "Investimenti volti a ridurre le emissioni di gas serra provenienti da attivit\u00e0 elencate nell\u2019allegato I",
+    "Investimenti legati a infrastrutture aeroportuali",
+    "Investimenti in discariche e impianti di trattamento rifiuti residui, salvo eccezioni previste",
+    "Attivit\u00e0 che limitano i diritti umani o violano normative internazionali/UE",
+    "Giochi d\u2019azzardo",
+    "Altre attivit\u00e0 proibite dalla normativa Orizzonte Europa"
+  ],
+  "interventi": [
+    {
+      "tipo": "A",
+      "nome": "Creazione di una nuova Unit\u00e0 Produttiva",
+      "descrizione": "Investimenti in immobilizzazioni materiali e immateriali per creare una nuova Unit\u00e1 Produttiva nel Lazio.",
+      "restrizioni": [
+        "PMI: SI",
+        "Grandi Imprese: SI, ma solo in Zone Assistite Plus o Ordinarie",
+        "Zona Assistita Plus/Ordinarie"
+      ]
+    },
+    {
+      "tipo": "A",
+      "nome": "Diversificazione delle produzioni esistenti per ottenere prodotti o servizi non fabbricati o forniti precedentemente da un\u2019Unit\u00e0 Produttiva esistente",
+      "descrizione": "Investimenti volti a diversificare unit\u00e0 produttive localizzate in Zone Assistite (PLUS o Ordinarie) per ottenere prodotti o servizi non fabbricati o forniti precedentemente.",
+      "restrizioni": [
+        "PMI: SI (Zone Assistite Plus o Ordinarie)",
+        "Grandi Imprese: SI (Zone Assistite Plus o Ordinarie)"
+      ]
+    },
+    {
+      "tipo": "A",
+      "nome": "Ampliamento della capacit\u00e0 produttiva di un\u2019Unit\u00e0 Produttiva esistente",
+      "descrizione": "Incremento della capacit\u00e0 produttiva di un\u2019Unit\u00e0 Produttiva esistente.",
+      "restrizioni": [
+        "PMI: SI",
+        "Grandi Imprese: NO"
+      ]
+    },
+    {
+      "tipo": "A",
+      "nome": "Cambiamento fondamentale del processo di un\u2019Unit\u00e0 Produttiva esistente",
+      "descrizione": "Cambio sostanziale del processo produttivo di un\u2019Unit\u00e0 Produttiva esistente.",
+      "restrizioni": [
+        "PMI: SI",
+        "Grandi Imprese: NO"
+      ]
+    },
+    {
+      "tipo": "B",
+      "nome": "Attivit\u00e0 di Sviluppo Sperimentale",
+      "descrizione": "Attivit\u00e0 di sviluppo che devono partire da TRL >= 3 e mirare a TRL >= 7, con piano di sfruttamento tecnico-industriale e commerciale, deliverables e coordinatore qualificato.",
+      "restrizioni": [
+        "TRL minimo 3; TRL finale >= 7",
+        "Piano di sfruttamento tecnico-industriale e commerciale",
+        "Obiettivo realizzativo e deliverable",
+        "Coordinatore/professionalit\u00e0 adeguata"
+      ]
+    },
+    {
+      "tipo": "C",
+      "nome": "Attivit\u00e0 di Formazione",
+      "descrizione": "Formazione di dipendenti e/o addetti, con spese fatturate all\u2019organizzazione responsabile della formazione e partecipazione dei dipendenti.",
+      "restrizioni": []
+    },
+    {
+      "tipo": "D",
+      "nome": "Consulenze e Servizi",
+      "descrizione": "Consulenze e servizi attinenti all\u2019industrializzazione e prima commercializzazione per PMI; spese valorizzate in tempo uomo o a corpo, con requisiti di documentazione.",
+      "restrizioni": [
+        "D.1.1 e D.1.2 per PMI",
+        "D.2 fino a 700,00 euro per imprese non obbligate al deposito bilancio"
+      ]
+    },
+    {
+      "tipo": "E",
+      "nome": "Premio per la Fideiussione",
+      "descrizione": "Premio per la fideiussione a garanzia dell\u2019anticipo obbligatorio.",
+      "restrizioni": []
+    }
+  ],
+  "natura_contributo": "Sovvenzione diretta in denaro",
+  "importi_unitari": {},
+  "massimali_dimensione": {},
+  "incompatibilita_aiuti": false,
+  "criteri_selezione": [
+    {
+      "codice": "1",
+      "nome": "Potenzialit\u00e0 del Progetto",
+      "max_punti": 30,
+      "descrizione": "Potenzialit\u00e0 economico-qualitative del prodotto/servizio, elementi innovativi, emergenti, all'avanguardia e/o contributo alla riduzione delle dipendenze strategiche.",
+      "formula": null
+    },
+    {
+      "codice": "2",
+      "nome": "Qualit\u00e0 del business model",
+      "max_punti": 25,
+      "descrizione": "Analisi di mercato, strategia commerciale e potenziale di crescita; per progetti con investimenti anche potenziale di diffusione sul mercato.",
+      "formula": null
+    },
+    {
+      "codice": "3",
+      "nome": "Livello di strutturazione del progetto",
+      "max_punti": 15,
+      "descrizione": "Definizione di tecnologia, tempi, modalit\u00e0 realizzative e capacit\u00e0 tecniche/organizzative.",
+      "formula": null
+    },
+    {
+      "codice": "4",
+      "nome": "Sostenibilit\u00e0 finanziaria",
+      "max_punti": 15,
+      "descrizione": "C\u5576erenza del piano di copertura finanziaria, flussi economici e rispetto del cronoprogramma.",
+      "formula": null
+    }
+  ],
+  "criterio_tiebreak": null,
+  "allegati_obbligatori": [
+    "Modello 1 Allegato all\u2019Avviso",
+    "Modello 2 Allegato all\u2019Avviso",
+    "Modello 3 Allegato all\u2019Avviso",
+    "Dichiarazione DNSH (Modello 4 Allegato all\u2019Avviso)",
+    "Dichiarazione DNSH Autovalutazione (Modello 4 Allegato all\u2019Avviso)",
+    "Dichiarazione indetraibilit\u00e0 IVA (Modello 6 Allegato all\u2019Avviso)",
+    "Dichiarazioni modelli 7 e 8 (Allegato all\u2019Avviso)",
+    "Atto di Impegno (Modello in Allegato all\u2019Avviso)",
+    "Contratto di aggregazione (Appendice 5) o testo equivalente",
+    "Dichiarazioni Mandanti (Modello R \u2013 Allegato all\u2019Avviso)",
+    "Relazioni e curricula per i costi del personale (Modelli 9 e 11 \u2013 Allegato all\u2019Avviso)"
+  ],
+  "piattaforma_invio": "GeCoWEB Plus",
+  "regola_senza_soccorso": false,
+  "ordine_istruttoria": "sportello",
+  "modalita_erogazione": "Anticipazione obbligatoria (40%); SAL a stato avanzamento lavori; saldo finale",
+  "documenti_erogazione": [
+    "Relazione stato di avanzamento e risultati raggiunti",
+    "Relazione di avanzamento per SAL e saldo (investimenti e/o sviluppo Sperimentale)",
+    "Documentazione di rendicontazione e costi sostenuti (contratti, Titoli di Spesa, estratti conto)",
+    "Computo metrico estimativo per lavori edili (se presente)",
+    "Timesheets e registri orari (per personale e consulenze) in conformit\u00e0 ai modelli previsti",
+    "Fideiussione a garanzia dell\u2019anticipo (se requerida)"
+  ],
+  "condizioni_revoca": [
+    "Delocalizzazione dell\u2019attivit\u00e0 nel Lazio o nello Spazio Economico Europeo entro i termini previsti",
+    "Alienazione, cessione o distrazione degli Investimenti agevolati entro i termini di legge",
+    "Mancata erogazione o mancato rispetto delle condizioni di erogazione",
+    "Dichiarazioni mendaci o irregolarit\u00e0 rilevate",
+    "Delocalizzazione o cessazione dell\u2019attivit\u00e0 agevolata entro i termini specificati",
+    "Ordine di recupero pendente o decisione europea che dichiari aiuto illegale",
+    "Irregolarit\u00e0 o violazioni di legge o obblighi contrattuali",
+    "Mancato rispetto degli obblighi di trasparenza o informazione"
+  ],
+  "file_name": "7cf8b850-f633-47c0-9921-963d31355a62_DD_G08307_30_06_2025_Bando.pdf",
+  "pagine_totali": null,
+  "data_processing": "2025-12-23T23:41:11.480965",
+  "fonte": null
+}

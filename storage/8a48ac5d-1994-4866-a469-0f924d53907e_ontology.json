@@ -1,0 +1,218 @@
+{
+  "id": "5d44e904-120d-48db-a82e-5c24d6cd96ec",
+  "identificativo": "GREEN HEAT 100% \u2013 Nuovi sistemi di teleriscaldamento e teleraffreddamento efficienti alimentati al 100% da fonti rinnovabili e/o calore di scarto",
+  "autorita": "Regione Lombardia",
+  "soggetto_attuatore": "Regione Lombardia",
+  "dotazione_finanziaria": 20000000.0,
+  "regime_aiuto": "Regolamento (UE) n. 651/2014 (GBER) - aiuti agli investimenti per teleriscaldamento e teleraffreddamento efficienti",
+  "tematiche": [
+    "Transizione ecologica",
+    "Innovazione",
+    "Sostenibilit\u00e0",
+    "Green Economy"
+  ],
+  "tipologie_fondo": [
+    "Europei",
+    "Regional"
+  ],
+  "tipologie_agevolazione": [
+    "A Fondo perduto"
+  ],
+  "destinatari": [
+    "Operatori dei servizi di teleriscaldamento",
+    "Micro-imprese",
+    "Piccole imprese",
+    "Medie imprese",
+    "Grandi imprese"
+  ],
+  "data_apertura_formulario": "2025-12-02T10:00:00",
+  "data_inizio_domande": "2025-12-02T10:00:00",
+  "data_fine_domande": "2026-04-15T16:00:00",
+  "piattaforma_presentazione": "http://www.bandi.regione.lombardia.it",
+  "dimensioni_ammesse": [
+    "Micro-imprese",
+    "Piccole imprese",
+    "Medie imprese",
+    "Grandi imprese"
+  ],
+  "requisiti_beneficiario": [
+    "Regolarmente costituita e iscritta nel Registro delle Imprese/CCIAA competente",
+    "Non trovarsi nello stato di impresa in difficolt\u00e0",
+    "Assenza di procedure in corso (fallimento, liquidazione, concordato, ecc.)",
+    "Sostenibilit\u00e0 finanziaria",
+    "Divieto di operare nei settori esclusi dal Regolamento (UE) n. 651/2014",
+    "Regolarit\u00e0 contributiva INPS/INAIL/Casse di Previdenza",
+    "Regolarit\u00e0 antimafia",
+    "Capacit\u00e0 di contrarre con la pubblica amministrazione"
+  ],
+  "sede_obbligatoria": "Lombardia",
+  "attributi_bonus": [
+    "Appartenenza alla categoria dei piccoli comuni e indice di svantaggio",
+    "Nuova iniziativa in area non servita da reti di teleriscaldamento",
+    "Mitigazione e contenimento degli impatti paesaggistici e ambientali",
+    "Utenza finale prevalentemente civile",
+    "Possesso titoli autorizzativi o abilitativi",
+    "Possesso di un piano di allacciamento",
+    "Recupero di calore di scarto",
+    "Certificazioni ambientali e sociali (ISO 14001, EMAS, ISO 45001, SA8000/PAS 24000)"
+  ],
+  "tipologie_intervento": [
+    "Nuovi sistemi di teleriscaldamento e teleraffrescamento efficienti alimentati al 100% da fonti rinnovabili e/o calore di scarto"
+  ],
+  "sottotipologie_cloud": [],
+  "importo_minimo_progetto": null,
+  "tempo_realizzazione_mesi": null,
+  "esclusioni": [
+    "Interventi che non siano al 100% alimentati da FER o da calore di scarto",
+    "Cogenerazione a gas",
+    "Interventi avviati prima della presentazione della domanda",
+    "Interventi completati o pienamente attuati prima della presentazione della domanda",
+    "Interventi con esito negativo di incidenza Natura 2000"
+  ],
+  "interventi": [
+    {
+      "tipo": "Sistemi di teleriscaldamento/teleraffrescamento",
+      "nome": "Nuovi sistemi di teleriscaldamento e teleraffrescamento efficienti",
+      "descrizione": "Interventi di nuova costruzione di sistemi di teleriscaldamento e teleraffrescamento efficienti, inclusi generatori/cogeneratori, reti di distribuzione e eventuali sistemi di stoccaggio termico, alimentati al 100% da fonti rinnovabili e/o calore di scarto, ubicati sul territorio della Regione Lombardia.",
+      "restrizioni": [
+        "Esclusivit\u00e0 dell\u2019allaccio delle utenze a uno solo dei due sistemi",
+        "Reti di distribuzione indipendenti e centrali autonome",
+        "Univocit\u00e0 di alimentazione",
+        "Contabilizzazione e tracciabilit\u00e0 separate se deroga consentita",
+        "DNSH e verifica climatica obbligatori"
+      ]
+    }
+  ],
+  "natura_contributo": "Contributo a fondo perduto",
+  "importi_unitari": {},
+  "massimali_dimensione": {},
+  "incompatibilita_aiuti": true,
+  "criteri_selezione": [
+    {
+      "codice": "RAI",
+      "nome": "Parametro RAI",
+      "max_punti": 30,
+      "descrizione": "Calcolato come rapporto tra riduzione di CO2 e investimento, espresso in tCO2/MEuro; PRAI = 30 x (RAI progetto/RAI max*)",
+      "formula": "PRAI = 30 x (RAI progetto/RAI max*)"
+    },
+    {
+      "codice": "REI",
+      "nome": "Parametro REI",
+      "max_punti": 30,
+      "descrizione": "Benefici energetici rispetto all\u2019investimento, espresso in tep/MEuro; PREI = 25 x (REI progetto/REI max*) + Kraffrescamento",
+      "formula": "PREI = 25 x (REI progetto/REI max*) + Kraffrescamento"
+    },
+    {
+      "codice": "IRR",
+      "nome": "Parametro IRR",
+      "max_punti": 10,
+      "descrizione": "IRR espresso come tasso di redditivit\u00e0; PIRR = 10 x (IRR progetto/IRR max*)",
+      "formula": "PIRR = 10 x (IRR progetto/IRR max*)"
+    },
+    {
+      "codice": "Prem1",
+      "nome": "Premialit\u00e0 1",
+      "max_punti": 5,
+      "descrizione": "Appartenenza alla categoria dei piccoli comuni ai sensi della LR 11/2004",
+      "formula": null
+    },
+    {
+      "codice": "Prem2",
+      "nome": "Premialit\u00e0 2",
+      "max_punti": 5,
+      "descrizione": "Nuova iniziativa in area non servita da reti di teleriscaldamento",
+      "formula": null
+    },
+    {
+      "codice": "Prem3",
+      "nome": "Premialit\u00e0 3",
+      "max_punti": 4,
+      "descrizione": "Mitigazione e contenimento degli impatti/paesaggistico",
+      "formula": null
+    },
+    {
+      "codice": "Prem4",
+      "nome": "Premialit\u00e0 4",
+      "max_punti": 3,
+      "descrizione": "Utenza finale prevalentemente civile",
+      "formula": null
+    },
+    {
+      "codice": "Prem5",
+      "nome": "Premialit\u00e0 5",
+      "max_punti": 3,
+      "descrizione": "Possesso dei titoli autorizzativi",
+      "formula": null
+    },
+    {
+      "codice": "Prem6",
+      "nome": "Premialit\u00e0 6",
+      "max_punti": 2,
+      "descrizione": "Possesso di un piano di allacciamento",
+      "formula": null
+    },
+    {
+      "codice": "Prem7",
+      "nome": "Premialit\u00e0 7",
+      "max_punti": 5,
+      "descrizione": "Recupero del calore di scarto",
+      "formula": null
+    },
+    {
+      "codice": "Prem8",
+      "nome": "Premialit\u00e0 8",
+      "max_punti": 3,
+      "descrizione": "Certificazioni ambientali e sociali",
+      "formula": null
+    }
+  ],
+  "criterio_tiebreak": "In caso di parit\u00e0 di punteggio, la posizione in graduatoria \u00e8 determinata dall\u2019ordine cronologico di presentazione della domanda",
+  "allegati_obbligatori": [
+    "Allegato 1 \u2013 Scheda intervento",
+    "Allegato 2 \u2013 Relazione prestazioni energetiche",
+    "Allegato 3 \u2013 Scheda per la verifica di conformit\u00e0 alle ammissibilit\u00e0 ambientali",
+    "Allegato 4 \u2013 Relazione di verifica climatica",
+    "Allegato 5 \u2013 Quadro economico",
+    "Allegato 6 \u2013 Dichiarazione sostitutiva di atto notorio",
+    "Allegato 7 \u2013 Dichiarazione di sostenibilit\u00e0 finanziaria",
+    "Allegato 8 \u2013 Schema di garanzia fidejussoria",
+    "Allegato 9 \u2013 Richiesta proroga dei termini",
+    "Allegato 10 \u2013 Informativa sul trattamento dei dati personali"
+  ],
+  "piattaforma_invio": "Bandi e Servizi Regione Lombardia",
+  "regola_senza_soccorso": false,
+  "ordine_istruttoria": null,
+  "modalita_erogazione": "Tre quote: anticipo all\u2019inizio lavori pari al 40%; seconda quota pari al 40% al raggiungimento del 50% dell\u2019investimento ammissibile; saldo al completamento dell\u2019intervento, collaudato e rendicontato",
+  "documenti_erogazione": [
+    "Verbale di avvio lavori",
+    "CIG",
+    "Bando di gara per l\u2019appalto",
+    "Documento relativo all\u2019approvazione del progetto esecutivo",
+    "Copia del progetto esecutivo e relativi elaborati (autorizzazioni paesaggistiche/ambientali, esame paesaggistico, eventuale invarianza idraulica, relazione CAM)",
+    "Provvedimento di aggiudicazione completo del verbale di gara",
+    "Dichiarazione ex DPR 445/2000 che l\u2019aggiudicazione definitiva \u00e8 efficace e non sono stati presentati ricorsi",
+    "Copia del contratto di appalto o verbale di consegna lavori",
+    "Checklist appalti (D.lgs. 36/2023)",
+    "Quadro economico aggiornato",
+    "Cronoprogramma aggiornato dei lavori e della spesa",
+    "Foto cartello di cantiere",
+    "Verbale di consegna lavori",
+    "Copia digitale originale della garanzia fidejussoria bancaria o assicurativa pari al 40% del contributo assegnato",
+    "DURC in corso di validit\u00e0",
+    "Dichiarazione di non essere destinatario di ordine di recupero pendente (Impegno Deggendorf)"
+  ],
+  "condizioni_revoca": [
+    "Mancato rispetto dei termini di attuazione (B.5) e delle modalit\u00e0 di esecuzione (C.6)",
+    "Irregolarit\u00e0 nell\u2019attuazione degli interventi",
+    "Mancato rispetto dei requisiti/ prescrizioni relative agli aiuti di Stato",
+    "Cessazione o trasferimento dell\u2019attivit\u00e0 o modifica sostanziale che comprometta obiettivi originari (art. 65 Reg. 1060/2021)",
+    "Mancata disponibilit\u00e0 di documentazione o irregolarit\u00e0 documentali",
+    "Mancato rispetto delle indicazioni del bando, DNSH, verifica climatica",
+    "Varianti non ammissibili (C.5) che incidano su punteggio o requisiti",
+    "Rinunce non accolte o inosservanza delle condizioni di pubblicit\u00e0"
+  ],
+  "file_name": "8a48ac5d-1994-4866-a469-0f924d53907e_2_Bando Green Heat 100_.pdf",
+  "pagine_totali": null,
+  "data_processing": "2025-12-24T00:20:21.666436",
+  "fonte": null
+}

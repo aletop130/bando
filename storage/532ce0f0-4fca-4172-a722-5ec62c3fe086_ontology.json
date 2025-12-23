@@ -1,0 +1,218 @@
+{
+  "id": "3c2aae57-5f59-4f2d-bd9f-9040c843d0b3",
+  "identificativo": "Voucher Digitalizzazione PMI II Edizione 2025",
+  "autorita": "Regione Lazio - Lazio Innova",
+  "soggetto_attuatore": "Lazio Innova S.p.A.",
+  "dotazione_finanziaria": 15000000.0,
+  "regime_aiuto": "De Minimis",
+  "tematiche": [
+    "Digitalizzazione",
+    "ICT",
+    "Innovazione"
+  ],
+  "tipologie_fondo": [
+    "Europei"
+  ],
+  "tipologie_agevolazione": [
+    "A Fondo perduto"
+  ],
+  "destinatari": [
+    "Micro Impresa",
+    "Piccola Impresa",
+    "Media Impresa",
+    "Imprese"
+  ],
+  "data_apertura_formulario": "2025-10-16T12:00:00",
+  "data_inizio_domande": "2025-10-24T12:00:00",
+  "data_fine_domande": "2025-11-24T17:00:00",
+  "piattaforma_presentazione": "GeCoWEB Plus",
+  "dimensioni_ammesse": [
+    "Micro Impresa",
+    "Piccola Impresa",
+    "Media Impresa"
+  ],
+  "requisiti_beneficiario": [
+    "Dimensione PMI",
+    "Iscritto al Registro delle Imprese Italiano",
+    "Sede Operativa nel Lazio",
+    "DURC regolare (situazione di regolarit\u00e0 contributiva)"
+  ],
+  "sede_obbligatoria": "Lazio",
+  "attributi_bonus": [
+    "Certificazione di Parit\u00e0 di Genere",
+    "Impresa Giovanile",
+    "Certificazione di Sostenibilit\u00e0 Ambientale"
+  ],
+  "tipologie_intervento": [
+    "Diagnosi Digitale",
+    "Digital Workplace",
+    "Digital Commerce & Engagement",
+    "Cloud Computing - Application Server",
+    "Cloud Computing - Database Server",
+    "Cloud Computing - Web Server",
+    "Cloud Computing - Database Back Up",
+    "Cyber Security"
+  ],
+  "sottotipologie_cloud": [],
+  "importo_minimo_progetto": 14000.0,
+  "tempo_realizzazione_mesi": 6,
+  "esclusioni": [
+    "Progetti con contributo inferiore a 14.000,00 euro",
+    "Progetti che includano solo l\u2019Intervento A Diagnosi Digitale",
+    "Micro Imprese non hanno diritto al contributo per la Diagnosi Digitale",
+    "Micro Imprese non hanno diritto al contributo per l\u2019adozione di Cyber Security",
+    "Progetti al di fuori delle tipologie e condizioni previste dall\u2019Avviso",
+    "Progetti gi\u00e0 agevolati sui precedenti Voucher Digitalizzazione senza corretta erogazione domande"
+  ],
+  "interventi": [
+    {
+      "tipo": "Intervento",
+      "nome": "Diagnosi Digitale",
+      "descrizione": "Valutazione dello stato di partenza e arrivo dell\u2019impresa in termini di adozione di tecnologie digitali; ex ante ed ex post; obbligatoria per PMI ed eventualmente per Micro Imprese con Relazione sulla Digitalizzazione o Diagnosi Digitale.",
+      "restrizioni": [
+        "Agevolazione disponibili solo per PMI; non ammissibile per Micro Imprese senza Relazione sulla Digitalizzazione; ex ante non obsoleta (sottoscritta entro 3 mesi dalla Data della Domanda)."
+      ]
+    },
+    {
+      "tipo": "Intervento",
+      "nome": "Digital Workplace",
+      "descrizione": "Acquisto di nuove applicazioni integrate per la produttivit\u00e0 individuale; massimo una Digital Workplace per addetto; cinque tipologie di software/sistemi/servizi obbligatori; nuove adozioni.",
+      "restrizioni": [
+        "Devono essere nuove adozioni, non solo rinnovi; contratti devono coprire almeno 36 mesi; contrattualizzazione entro data di erogazione del saldo."
+      ]
+    },
+    {
+      "tipo": "Intervento",
+      "nome": "Digital Commerce & Engagement",
+      "descrizione": "Adozione di soluzioni digitali per marketing, vendita e customer engagement; includono piattaforme di digital commerce (IaaS/PaaS), dominio SSL e servizi ICT a supporto; condizioni di nuova adozione e durata contrattuale 36 mesi.",
+      "restrizioni": [
+        "Nessun acquisto basato su SaaS; SSL deve essere presente; nuove adozioni non sostituzioni di soluzioni preesistenti oltre i 3 anni."
+      ]
+    },
+    {
+      "tipo": "Intervento",
+      "nome": "Cloud Computing \u2013 Application Server",
+      "descrizione": "Migrazione di infrastruttura esecutiva di applicazioni aziendali e dati in cloud pubblico per VM D.1; include sei servizi per migrazione e gestione del cloud; nuova adozione; contratti 36 mesi; contrattualizzazione entro erogazione del saldo.",
+      "restrizioni": [
+        "Migrazione su cloud pubblico di applicazioni on-premises; non SaaS; nuova adozione; 3 anni di durata."
+      ]
+    },
+    {
+      "tipo": "Intervento",
+      "nome": "Cloud Computing \u2013 Database Server",
+      "descrizione": "Migrazione su cloud pubblico della componente Database Server (D.2) con analoghe condizioni a quelle di D.1.",
+      "restrizioni": [
+        "Come per D.1, con riferimento a Database Server."
+      ]
+    },
+    {
+      "tipo": "Intervento",
+      "nome": "Cloud Computing \u2013 Web Server",
+      "descrizione": "Migrazione su cloud pubblico della componente Web Server (D.3) con analoghe condizioni.",
+      "restrizioni": [
+        "Come per D.1, con riferimento a Web Server."
+      ]
+    },
+    {
+      "tipo": "Intervento",
+      "nome": "Cloud Computing \u2013 Database Back Up",
+      "descrizione": "Migrazione su cloud pubblico della componente Database Back Up (D.4) con analoghe condizioni.",
+      "restrizioni": [
+        "Come per D.1, con riferimento a Database Back Up."
+      ]
+    },
+    {
+      "tipo": "Intervento",
+      "nome": "Cyber Security",
+      "descrizione": "Adozione di sistemi di Cyber Security; almeno una delle 8 soluzioni; comprende gestione identit\u00e0 e accessi, sicurezza della rete, sicurezza degli endpoint, gestione dei dati, vulnerabilit\u00e0, security analytics, sicurezza delle applicazioni, gestione del rischio e compliance; specifico per PMI e MPM.",
+      "restrizioni": [
+        "Intervento E riservato alle PMI e alle Medie Imprese; Micro Imprese non ammissibili per alcune configurazioni e costi."
+      ]
+    }
+  ],
+  "natura_contributo": "Sovvenzione a fondo perduto (De Minimis)",
+  "importi_unitari": {},
+  "massimali_dimensione": {
+    "Micro Impresa": 50000.0,
+    "Piccola Impresa": 100000.0,
+    "Media Impresa": 150000.0
+  },
+  "incompatibilita_aiuti": true,
+  "criteri_selezione": [
+    {
+      "codice": "C1",
+      "nome": "Dimensione valore aggiunto per addetto",
+      "max_punti": 35,
+      "descrizione": "Punteggio basato sul rapporto tra Volume d\u2019Affari e Totale Acquisti, rispetto al numero degli addetti.",
+      "formula": null
+    },
+    {
+      "codice": "C2",
+      "nome": "Numero di addetti",
+      "max_punti": 20,
+      "descrizione": "Punteggio in funzione del numero di addetti (Forza Aziendale) INPS giugno 2025.",
+      "formula": null
+    },
+    {
+      "codice": "C3",
+      "nome": "Articolazione del Progetto",
+      "max_punti": 15,
+      "descrizione": "Punteggio in funzione del numero di Tipologie di Intervento che compongono il Progetto.",
+      "formula": null
+    },
+    {
+      "codice": "C4",
+      "nome": "Imprenditore parit\u00e0 di genere",
+      "max_punti": 10,
+      "descrizione": "Possesso della Certificazione di Parit\u00e0 di Genere e attestazione.",
+      "formula": null
+    },
+    {
+      "codice": "C5",
+      "nome": "Impresa Giovanile",
+      "max_punti": 10,
+      "descrizione": "PMI con caratteristiche di Impresa Giovanile come definito nell\u2019Appendice 1.",
+      "formula": null
+    },
+    {
+      "codice": "C6",
+      "nome": "Imprese sostenibilit\u00e0 ambientale",
+      "max_punti": 10,
+      "descrizione": "PMI in possesso di almeno una Certificazione di Sostenibilit\u00e0 Ambientale e attestazione.",
+      "formula": null
+    }
+  ],
+  "criterio_tiebreak": "In caso di parit\u00e0 di punteggio si applicano i punteggi del primo criterio di selezione (C1), poi del secondo (C2), e cos\u00ec via in ordine numerico.",
+  "allegati_obbligatori": [
+    "Relazione sulla Digitalizzazione (Micro Impresa) o Diagnosi Digitale ex ante/ex post (PMI)",
+    "Dichiarazione IVA periodo 2024 (o dichiarazione redditi per regime forfettario) per criterio 1",
+    "Attestazione della denuncia contributiva INPS (giugno 2025) per criteri 1 e 2",
+    "Certificazione di Parit\u00e0 di Genere per criterio 4",
+    "Certificazione di Sostenibilit\u00e0 Ambientale per criterio 6"
+  ],
+  "piattaforma_invio": "GeCoWEB Plus",
+  "regola_senza_soccorso": false,
+  "ordine_istruttoria": "Inizio dall\u2019alto al basso in base al punteggio totale dichiarato, con preferenze come previsto dall\u2019articolo 4",
+  "modalita_erogazione": "Saldo, previa domanda di erogazione, entro 6 mesi dalla Data di Concessione",
+  "documenti_erogazione": [
+    "Relazione ex post Diagnosi Digitale o Relazione sulla Digitalizzazione",
+    "Dichiarazione sostitutiva dell\u2019assenza di doppio finanziamento"
+  ],
+  "condizioni_revoca": [
+    "Mancata trasmissione dell\u2019Atto di Impegno entro i termini",
+    "Mancato rispetto dei requisiti di ammissibilit\u00e0",
+    "Dichiarazioni mendaci",
+    "Mancata presentazione delle richieste di erogazione entro i termini",
+    "Ottenimento di un altro Aiuto pubblico in violazione",
+    "Progetto gravemente difforme da quello approvato",
+    "Rilocalizzazione dell\u2019attivit\u00e0 beneficiaria del contributo fuori Lazio entro 5 anni",
+    "Rilocalizzazione fuori SEE entro 10 anni",
+    "Cessazione dell\u2019attivit\u00e0 entro 3 anni dall\u2019erogazione",
+    "Irregolarit\u00e0 imputabili al Beneficiario",
+    "Altre violazioni di legge"
+  ],
+  "file_name": "532ce0f0-4fca-4172-a722-5ec62c3fe086_DD_G13041_10_10_2025_Bando.pdf",
+  "pagine_totali": null,
+  "data_processing": "2025-12-24T00:18:09.634844",
+  "fonte": null
+}

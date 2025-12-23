@@ -1,0 +1,103 @@
+{
+  "id": "1ec86bf9-85cc-4a74-ac0d-fc7e06551d57",
+  "identificativo": "Avviso Pubblico Impresa Rosa Regione Lazio",
+  "autorita": "Regione Lazio",
+  "soggetto_attuatore": "Lazio Innova S.p.A.",
+  "dotazione_finanziaria": 250000.0,
+  "regime_aiuto": "De Minimis",
+  "tematiche": [
+    "Pari Opportunit\u00e0",
+    "Inclusione",
+    "Formazione",
+    "Sostenibilit\u00e0"
+  ],
+  "tipologie_fondo": [
+    "Europei",
+    "Regional"
+  ],
+  "tipologie_agevolazione": [
+    "A Fondo perduto"
+  ],
+  "destinatari": [
+    "Micro-imprese",
+    "Piccole imprese"
+  ],
+  "data_apertura_formulario": "2024-08-26T12:00:00",
+  "data_inizio_domande": "2024-08-28T12:00:00",
+  "data_fine_domande": "2025-08-27T17:00:00",
+  "piattaforma_presentazione": "GeCoWEB Plus",
+  "dimensioni_ammesse": [
+    "Micro-imprese",
+    "Piccole imprese"
+  ],
+  "requisiti_beneficiario": [
+    "Iscrizione al Registro delle Imprese Italiano",
+    "Sede operativa ubicata nel Lazio",
+    "Dimensione Micro o Piccola Impresa (Reg. UE 651/2014)",
+    "Almeno un dipendente in termini di ULA nel 2023 (o ultimo esercizio chiuso)",
+    "Non possedere Certificazione di Parit\u00e0 di Genere",
+    "Esclusione dai settori De Minimis: produzione primaria agricoli, pesca, acquacoltura"
+  ],
+  "sede_obbligatoria": "Lazio",
+  "attributi_bonus": [
+    "Premialit\u00e0 per Certificazione di Parit\u00e0 di Genere UNI/PdR 125:2022",
+    "Diritto di utilizzare il marchio Impresa Rosa Regione Lazio",
+    "Priorit\u00e0 o premialit\u00e0 per accesso ad agevolazioni della Regione Lazio"
+  ],
+  "tipologie_intervento": [
+    "Richiesta di contributo per l'ottenimento della certificazione UNI/PdR 125:2022",
+    "Richiesta di uso del marchio Impresa Rosa Regione Lazio"
+  ],
+  "sottotipologie_cloud": [],
+  "importo_minimo_progetto": null,
+  "tempo_realizzazione_mesi": null,
+  "esclusioni": [
+    "Settori esclusi dal Regolamento De Minimis (produzione primaria di prodotti agricoli, pesca e acquacoltura)",
+    "Contributo non compatibile con altri aiuti di Stato o finanziamenti pubblici per la stessa Certificazione",
+    "Non compatibile con voucher PNRR Investimento 1.3"
+  ],
+  "interventi": [
+    {
+      "tipo": "Contributo",
+      "nome": "Richiesta di contributo per l'ottenimento della certificazione UNI/PdR 125:2022",
+      "descrizione": "Contributo a fondo perduto per Micro e Piccole Imprese per ottenere la prima Certificazione di Parit\u00e0 di Genere UNI/PdR 125:2022; una volta ottenuta, diritto all\u2019utilizzo del marchio Impresa Rosa Regione Lazio.",
+      "restrizioni": []
+    },
+    {
+      "tipo": "Uso del marchio",
+      "nome": "Richiesta di uso del marchio Impresa Rosa Regione Lazio",
+      "descrizione": "Imprese che hanno ottenuto la Certificazione di Parit\u00e0 di Genere possono richiedere l\u2019uso del marchio e accedere a benefici associati.",
+      "restrizioni": []
+    }
+  ],
+  "natura_contributo": "Contributo a fondo perduto",
+  "importi_unitari": {},
+  "massimali_dimensione": {},
+  "incompatibilita_aiuti": true,
+  "criteri_selezione": [],
+  "criterio_tiebreak": null,
+  "allegati_obbligatori": [
+    "Dichiarazione attestante numero di dipendenti (ULA) e dimensione d\u2019impresa (modello 1 o 2)",
+    "Dichiarazione circa conflitti di interesse (modello 3)",
+    "Certificazione UNI/PdR 125:2022 (per la richiesta A) oppure documentazione attestante certificazione (per B)"
+  ],
+  "piattaforma_invio": "GeCoWEB Plus",
+  "regola_senza_soccorso": false,
+  "ordine_istruttoria": null,
+  "modalita_erogazione": "A saldo, in un'unica soluzione",
+  "documenti_erogazione": [
+    "Documentazione attestante rilascio della prima Certificazione di Parit\u00e0 di Genere (UNI/PdR 125:2022) da organismo accreditato"
+  ],
+  "condizioni_revoca": [
+    " Rinuncia o revoca e restituzione del contributo se mancato rispetto degli obblighi",
+    "Mancata trasmissione dell\u2019Atto di Impegno entro i termini",
+    "Mancato rispetto dei requisiti soggettivi di cui all\u2019articolo 2",
+    "Dichiarazioni mendaci o indicazioni non veritiere",
+    "Ottenimento di altro aiuto di Stato per la stessa certificazione in violazione",
+    "Mancata erogazione della domanda di erogazione entro i termini"
+  ],
+  "file_name": "067dc2b1-8835-4771-96ae-6e327797dfdc_DD_G09857_23_07_2024_bando.pdf",
+  "pagine_totali": null,
+  "data_processing": "2025-12-24T00:14:17.612018",
+  "fonte": null
+}

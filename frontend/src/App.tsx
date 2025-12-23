@@ -7,15 +7,24 @@ const API_BASE = 'http://localhost:8000'
 
 type ProcessingStatus = 'queued' | 'processing' | 'completed' | 'error' | null
 
+interface JobStatus {
+  jobId: string
+  filename: string
+  status: ProcessingStatus
+  progress?: string
+  error?: string
+}
+
 function App() {
-  const [file, setFile] = useState<File | null>(null)
+  const [files, setFiles] = useState<File[]>([])
   const [uploading, setUploading] = useState<boolean>(false)
-  const [jobId, setJobId] = useState<string | null>(null)
-  const [status, setStatus] = useState<ProcessingStatus>(null)
+  const [jobStatuses, setJobStatuses] = useState<JobStatus[]>([])
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [inputMessage, setInputMessage] = useState<string>('')
   const [loadingAnswer, setLoadingAnswer] = useState<boolean>(false)
   const [chatStarted, setChatStarted] = useState<boolean>(false)
+  const [activeCollection, setActiveCollection] = useState<string>('Bandi')
+  const [availableCollections, setAvailableCollections] = useState<string[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = (): void => {
@@ -26,36 +35,72 @@ function App() {
     scrollToBottom()
   }, [messages])
 
+  useEffect(() => {
+    // Carica le collections disponibili all'avvio
+    fetchCollections()
+  }, [])
+
+  const fetchCollections = async (): Promise<void> => {
+    try {
+      const response = await axios.get(`${API_BASE}/collections`)
+      setAvailableCollections(response.data.collections || [])
+    } catch (error) {
+      console.error('Errore nel caricamento delle collections:', error)
+    }
+  }
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    const selectedFile = e.target.files?.[0] || null
-    setFile(selectedFile)
-    setJobId(null)
-    setStatus(null)
+    const selectedFiles = Array.from(e.target.files || [])
+    setFiles(selectedFiles)
+    setJobStatuses([])
     setMessages([])
     setChatStarted(false)
   }
 
   const handleUpload = async (): Promise<void> => {
-    if (!file) {
-      alert('Seleziona un file PDF')
+    if (!files.length) {
+      alert('Seleziona almeno un file PDF')
       return
     }
 
     setUploading(true)
-    const formData = new FormData()
-    formData.append('file', file)
+    const newJobStatuses: JobStatus[] = files.map(file => ({
+      jobId: '',
+      filename: file.name,
+      status: 'queued' as ProcessingStatus,
+      progress: 'In preparazione...'
+    }))
+    setJobStatuses(newJobStatuses)
 
     try {
-      const response = await axios.post<UploadResponse>(`${API_BASE}/upload`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      // Upload multiplo: una chiamata per ogni file
+      const uploadPromises = files.map(async (file, index) => {
+        const formData = new FormData()
+        formData.append('file', file)
+        
+        const response = await axios.post<UploadResponse>(`${API_BASE}/upload`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+
+        // Aggiorna lo stato del job
+        setJobStatuses(prev => prev.map((job, idx) => 
+          idx === index 
+            ? { ...job, jobId: response.data.job_id, status: 'queued', progress: 'In coda...' }
+            : job
+        ))
+
+        return response.data.job_id
       })
 
-      setJobId(response.data.job_id)
-      setStatus(response.data.status as ProcessingStatus)
+      const jobIds = await Promise.all(uploadPromises)
       
-      pollStatus(response.data.job_id)
+      // Avvia il polling per ogni job
+      jobIds.forEach((jobId, index) => {
+        pollStatus(jobId, index)
+      })
+      
     } catch (error) {
       console.error('Errore upload:', error)
       const errorMessage = axios.isAxiosError(error) 
@@ -66,31 +111,47 @@ function App() {
     }
   }
 
-  const pollStatus = async (id: string): Promise<void> => {
+  const pollStatus = async (jobId: string, index: number): Promise<void> => {
     const interval = setInterval(async () => {
       try {
-        const response = await axios.get<StatusResponse>(`${API_BASE}/status/${id}`)
+        const response = await axios.get<StatusResponse>(`${API_BASE}/status/${jobId}`)
         const newStatus = response.data
         
-        setStatus(newStatus.status)
+        setJobStatuses(prev => prev.map((job, idx) => 
+          idx === index 
+            ? { 
+                ...job, 
+                status: newStatus.status, 
+                progress: newStatus.progress,
+                error: newStatus.error
+              }
+            : job
+        ))
         
         if (newStatus.status === 'completed') {
           clearInterval(interval)
-          setUploading(false)
-          setMessages([{
-            role: 'assistant',
-            content: `✅ Documento processato con successo! Ho analizzato ${newStatus.chunks_count || 'N/A'} sezioni. Ora puoi farmi domande sul bando.`
-          }])
-          setChatStarted(true)
+          
+          // Controlla se tutti i job sono completati
+          const allCompleted = jobStatuses.every(job => 
+            job.status === 'completed' || (job.jobId === jobId && newStatus.status === 'completed')
+          )
+          
+          if (allCompleted && !chatStarted) {
+            setUploading(false)
+            setMessages([{
+              role: 'assistant',
+              content: `✅ ${jobStatuses.length} documento(i) processati con successo! Ora puoi farmi domande sui bandi.`
+            }])
+            setChatStarted(true)
+            fetchCollections() // Aggiorna la lista delle collections
+          }
         } else if (newStatus.status === 'error') {
           clearInterval(interval)
-          setUploading(false)
-          alert('Errore durante il processing: ' + (newStatus.error || 'Errore sconosciuto'))
+          console.error(`Errore nel job ${jobId}:`, newStatus.error)
         }
       } catch (error) {
         console.error('Errore polling status:', error)
         clearInterval(interval)
-        setUploading(false)
       }
     }, 2000)
   }
@@ -112,7 +173,7 @@ function App() {
 
       const request: ChatRequest = {
         messages: allMessages,
-        collection_name: 'Bandi'
+        collection_name: activeCollection
       }
 
       const response = await axios.post<ChatResponse>(`${API_BASE}/chat`, request)
@@ -143,9 +204,28 @@ function App() {
     setMessages([])
     setChatStarted(false)
     setInputMessage('')
-    setFile(null)
-    setJobId(null)
-    setStatus(null)
+    setFiles([])
+    setJobStatuses([])
+  }
+
+  const handleRemoveFile = (index: number): void => {
+    setFiles(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const handleCollectionChange = (collection: string): void => {
+    setActiveCollection(collection)
+    setMessages([{
+      role: 'assistant',
+      content: `✅ Collection cambiata a "${collection}". Puoi ora chattare con i documenti in questa collection.`
+    }])
+  }
+
+  const getCompletionCount = (): number => {
+    return jobStatuses.filter(job => job.status === 'completed').length
+  }
+
+  const getTotalJobs = (): number => {
+    return jobStatuses.length
   }
 
   return (
@@ -154,7 +234,25 @@ function App() {
         <header className="header">
           <div className="header-content">
             <h1>📄 GraphRAG Bandi Chat</h1>
-            <p className="subtitle">Carica un bando PDF e chatta con l'AI per ottenere informazioni specifiche</p>
+            <p className="subtitle">Carica multipli PDF e chatta con l'AI per ottenere informazioni specifiche</p>
+          </div>
+          <div className="header-actions">
+            {availableCollections.length > 0 && (
+              <div className="collection-selector">
+                <select 
+                  value={activeCollection}
+                  onChange={(e) => handleCollectionChange(e.target.value)}
+                  className="collection-select"
+                >
+                  {availableCollections.map(collection => (
+                    <option key={collection} value={collection}>
+                      {collection}
+                    </option>
+                  ))}
+                </select>
+                <span className="collection-label">Collection attiva</span>
+              </div>
+            )}
           </div>
         </header>
 
@@ -162,65 +260,133 @@ function App() {
           {/* Upload Section */}
           <section className="upload-card card">
             <div className="card-header">
-              <h2>📤 Carica Nuovo Documento</h2>
-              <span className="card-subtitle">(Opzionale - puoi anche chattare con documenti esistenti)</span>
+              <h2>📤 Carica Documenti</h2>
+              <span className="card-subtitle">(Puoi caricare uno o più PDF contemporaneamente)</span>
             </div>
             <div className="upload-section">
-              <div className="file-input-container">
-                <label className="file-input-label">
+              <div className="file-input-container multiple">
+                <label className="file-input-label multiple">
                   <input
                     type="file"
                     accept=".pdf"
                     onChange={handleFileChange}
                     disabled={uploading}
                     className="file-input"
+                    multiple
                   />
                   <span className="file-input-custom">
-                    {file ? file.name : 'Scegli file PDF...'}
+                    {files.length > 0 
+                      ? `${files.length} file selezionati` 
+                      : 'Scegli file PDF (multipli)...'}
                   </span>
                 </label>
+                
+                {files.length > 0 && (
+                  <div className="selected-files">
+                    <h4>File selezionati ({files.length}):</h4>
+                    <ul className="file-list">
+                      {files.map((file, index) => (
+                        <li key={index} className="file-item">
+                          <span className="file-name">{file.name}</span>
+                          <span className="file-size">
+                            {(file.size / 1024 / 1024).toFixed(2)} MB
+                          </span>
+                          <button
+                            onClick={() => handleRemoveFile(index)}
+                            className="remove-file-btn"
+                            disabled={uploading}
+                            aria-label="Rimuovi file"
+                          >
+                            ×
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 <div className="upload-buttons">
                   <button
                     onClick={handleUpload}
-                    disabled={uploading || !file}
+                    disabled={uploading || !files.length}
                     className="btn btn-primary"
                   >
                     {uploading ? (
                       <>
                         <span className="spinner"></span>
-                        Caricamento...
+                        Caricamento in corso...
                       </>
-                    ) : 'Carica PDF'}
+                    ) : `Carica ${files.length} PDF`}
                   </button>
                   {chatStarted && (
                     <button
                       onClick={startNewChat}
                       className="btn btn-secondary"
                     >
-                      Nuovo Documento
+                      Nuova Chat
                     </button>
                   )}
                 </div>
               </div>
 
-              {jobId && (
+              {jobStatuses.length > 0 && (
                 <div className="status-section">
                   <div className="status-header">
                     <h3>Stato Elaborazione</h3>
-                    <div className={`status-indicator status-${status || ''}`}>
-                      {status === 'queued' && '⏳ In coda'}
-                      {status === 'processing' && '⚙️ Elaborazione...'}
-                      {status === 'completed' && '✅ Completato'}
-                      {status === 'error' && '❌ Errore'}
+                    <div className="status-summary">
+                      <span className="status-summary-text">
+                        {getCompletionCount()} / {getTotalJobs()} completati
+                      </span>
+                      <div className="progress-bar">
+                        <div 
+                          className="progress-fill"
+                          style={{ width: `${(getCompletionCount() / getTotalJobs()) * 100}%` }}
+                        ></div>
+                      </div>
                     </div>
                   </div>
-                  <div className="status-details">
-                    <p><strong>ID Processo:</strong> <code>{jobId}</code></p>
-                    {status === 'completed' && (
-                      <div className="status-completed-info">
-                        <span>✅ Pronto per le domande</span>
+                  
+                  <div className="jobs-list">
+                    {jobStatuses.map((job, index) => (
+                      <div key={index} className="job-item">
+                        <div className="job-header">
+                          <div className="job-filename">
+                            <span className="job-index">{index + 1}.</span>
+                            <span className="job-name">{job.filename}</span>
+                          </div>
+                          <div className={`job-status-indicator status-${job.status || ''}`}>
+                            {job.status === 'queued' && '⏳'}
+                            {job.status === 'processing' && '⚙️'}
+                            {job.status === 'completed' && '✅'}
+                            {job.status === 'error' && '❌'}
+                            <span className="job-status-text">
+                              {job.status === 'queued' && 'In coda'}
+                              {job.status === 'processing' && 'Elaborazione...'}
+                              {job.status === 'completed' && 'Completato'}
+                              {job.status === 'error' && 'Errore'}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="job-details">
+                          {job.progress && (
+                            <div className="job-progress">
+                              <span>{job.progress}</span>
+                            </div>
+                          )}
+                          {job.error && (
+                            <div className="job-error">
+                              <strong>Errore:</strong> {job.error}
+                            </div>
+                          )}
+                          {job.jobId && (
+                            <div className="job-id">
+                              <small>ID: {job.jobId}</small>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
+                    ))}
                   </div>
                 </div>
               )}
@@ -230,8 +396,13 @@ function App() {
           {/* Chat Section */}
           <section className="chat-card card">
             <div className="card-header">
-              <h2>💬 Chat con il Bando</h2>
+              <h2>💬 Chat con i Documenti</h2>
               <div className="chat-stats">
+                {activeCollection && (
+                  <span className="collection-badge">
+                    Collection: {activeCollection}
+                  </span>
+                )}
                 {messages.length > 0 && (
                   <span className="message-count">{messages.length} messaggi</span>
                 )}
@@ -239,25 +410,28 @@ function App() {
             </div>
 
             <div className="chat-container">
-              {status === 'processing' && (
+              {uploading && (
                 <div className="processing-notice">
                   <div className="notice-content">
-                    <span className="notice-icon">⚙️</span>
+                    <span className="notice-icon">📤</span>
                     <div>
-                      <strong>Documento in elaborazione...</strong>
-                      <p>Puoi comunque chattare con i documenti già processati nel sistema.</p>
+                      <strong>Upload in corso...</strong>
+                      <p>Sto caricando e processando {files.length} documento(i). Puoi comunque chattare con i documenti già processati.</p>
                     </div>
                   </div>
                 </div>
               )}
               
-              {status === null && messages.length === 0 && (
+              {!uploading && messages.length === 0 && jobStatuses.length === 0 && (
                 <div className="welcome-notice">
                   <div className="notice-content">
                     <span className="notice-icon">💡</span>
                     <div>
                       <strong>Benvenuto in GraphRAG Bandi Chat!</strong>
-                      <p>Carica un documento PDF per iniziare una nuova conversazione, oppure fai direttamente una domanda sui documenti già presenti nel sistema.</p>
+                      <p>Carica uno o più documenti PDF per iniziare una nuova conversazione, oppure fai direttamente una domanda sui documenti già presenti nel sistema.</p>
+                      <p className="hint-text">
+                        💡 Puoi caricare più PDF contemporaneamente per confrontare bandi diversi!
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -306,7 +480,7 @@ function App() {
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyDown={handleKeyPress}
-                    placeholder="Scrivi la tua domanda sul bando... (Premi Invio per inviare, Shift+Invio per andare a capo)"
+                    placeholder="Scrivi la tua domanda sui bandi... (Premi Invio per inviare, Shift+Invio per andare a capo)"
                     className="chat-input"
                     rows={2}
                     disabled={loadingAnswer}
@@ -325,7 +499,7 @@ function App() {
                   </button>
                 </div>
                 <div className="input-hint">
-                  <span>GraphRAG analizzerà il documento e risponderà alle tue domande</span>
+                  <span>GraphRAG analizzerà tutti i documenti e risponderà alle tue domande</span>
                 </div>
               </div>
             </div>
@@ -333,7 +507,12 @@ function App() {
         </main>
 
         <footer className="footer">
-          <p>GraphRAG Bandi Chat v1.0 • Analisi documenti con AI avanzata</p>
+          <p>GraphRAG Bandi Chat v2.0 • Supporto multi-documento con AI avanzata</p>
+          <div className="footer-info">
+            <span>📚 {availableCollections.length} collections disponibili</span>
+            <span>•</span>
+            <span>⚡ Processing parallelo con Celery</span>
+          </div>
         </footer>
       </div>
     </div>

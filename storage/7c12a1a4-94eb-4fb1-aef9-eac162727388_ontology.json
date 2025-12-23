@@ -1,0 +1,178 @@
+{
+  "id": "e57f5b5d-69a5-4ac6-9388-21c8cf30ce8b",
+  "identificativo": "Energia Solare per le Imprese",
+  "autorita": "Regione Lazio",
+  "soggetto_attuatore": "Lazio Innova",
+  "dotazione_finanziaria": 20000000.0,
+  "regime_aiuto": "De Minimis",
+  "tematiche": [
+    "Innovazione",
+    "Sostenibilit\u00e0"
+  ],
+  "tipologie_fondo": [
+    "Europei",
+    "Regional"
+  ],
+  "tipologie_agevolazione": [
+    "A Fondo perduto"
+  ],
+  "destinatari": [
+    "Imprese",
+    "Grandi imprese",
+    "Medie Imprese",
+    "Piccole imprese",
+    "Micro-imprese"
+  ],
+  "data_apertura_formulario": "2026-01-19T12:00:00",
+  "data_inizio_domande": "2026-02-03T12:00:00",
+  "data_fine_domande": "2026-03-31T17:00:00",
+  "piattaforma_presentazione": "GeCoWEB Plus",
+  "dimensioni_ammesse": [
+    "Micro-imprese",
+    "Piccole Imprese",
+    "Medie Imprese",
+    "Grandi Imprese"
+  ],
+  "requisiti_beneficiario": [
+    "Iscritta al Registro delle Imprese Italiano",
+    "Sede legale o unit\u00e0 locale ubicata nel Lazio",
+    "Non essere Impresa in Difficolt\u00e0",
+    "Non aver delocalizzato da uno Stato EEA nei due anni precedenti",
+    "Possedere DURC (regolarit\u00e0 contributiva)",
+    "Polizza catastrofale in corso di validit\u00e0 (se tenuta)"
+  ],
+  "sede_obbligatoria": "Lazio",
+  "attributi_bonus": [
+    "Certificazione di Parit\u00e0 di Genere",
+    "ISO 50001 / ISO 14001 / EMAS"
+  ],
+  "tipologie_intervento": [
+    "Investimenti per autoproduzione di energia elettrica da fonte fotovoltaica e relativi sistemi di accumulo"
+  ],
+  "sottotipologie_cloud": [],
+  "importo_minimo_progetto": 75000.0,
+  "tempo_realizzazione_mesi": 12,
+  "esclusioni": [
+    "Impianti a servizio di unit\u00e0 immobiliari che svolgono Attivit\u00e0 Economiche Escluse",
+    "Delocalizzazione dell\u2019attivit\u00e0 nel EE space nei due anni precedenti",
+    "Nuova Potenza installata che non rispetti il Fabbisogno Elettrico Annuo della sede o unit\u00e0 locale (+ tolleranza 20%)",
+    "Impianti non ubicati in aree naturali protette o Natura 2000",
+    "Impianti non conformi CEI 0-16:2025/CEI 0-21:2022 e non utilizzare moduli europei censiti",
+    "Acquisto di terreni o fabbricati; IVA non ammissibile; spese per autofatturazione; costi relativi a parti correlate"
+  ],
+  "interventi": [
+    {
+      "tipo": "Investimento",
+      "nome": "Investimenti per autoproduzione di energia elettrica da fonte fotovoltaica e relativi sistemi di accumulo",
+      "descrizione": "Acquisto e installazione di nuova capacit\u00e0 di produzione di energia elettrica da fonte fotovoltaica e sistemi di accumulo, da utilizzare in servizio di unit\u00e0 immobiliare nel Lazio non residenziale",
+      "restrizioni": [
+        "Costo minimo 75.000 euro",
+        "Nuova Potenza installata non superiore al Fabbisogno Elettrico Annuo dell\u2019impresa (+20% tolleranza)",
+        "Completamento entro 12 mesi dalla Data di Concessione",
+        "Avvio del Progetto definito da una o pi\u00f9 condizioni: ordini, fatture o pagamenti relativi ai beni inclusi"
+      ]
+    }
+  ],
+  "natura_contributo": "A fondo perduto",
+  "importi_unitari": {},
+  "massimali_dimensione": {},
+  "incompatibilita_aiuti": true,
+  "criteri_selezione": [
+    {
+      "codice": "1.a",
+      "nome": "Dimensione dell\u2019impianto",
+      "max_punti": 30,
+      "descrizione": "KWp > 600: 30 punti; >200 e \u2264 600: 20 punti; \u2264 200: 10 punti",
+      "formula": null
+    },
+    {
+      "codice": "1.b",
+      "nome": "Percentuale di copertura del Fabbisogno Elettrico Annuo",
+      "max_punti": 30,
+      "descrizione": ">40%: 30 punti; >30% e \u226440%: 23 punti; >20% e \u226430%: 15 punti; >10% e \u226420%: 8 punti; \u226410%: 0",
+      "formula": null
+    },
+    {
+      "codice": "1.c",
+      "nome": "Costo unitario della Nuova Potenza da fonte fotovoltaica",
+      "max_punti": 15,
+      "descrizione": "Intervallo \u20ac/kWp per potenze fino a 200 kWp, >200-600 kWp e >600 kWp con soglie specifiche",
+      "formula": null
+    },
+    {
+      "codice": "2.a",
+      "nome": "Efficienza massa del modulo",
+      "max_punti": 10,
+      "descrizione": "Efficienza massima del modulo > 22,5%: 10 punti; 21,5-22,5%: 5 punti; < 21,5%: 0",
+      "formula": null
+    },
+    {
+      "codice": "2.b",
+      "nome": "Indipendenza dalle infrastrutture di rete",
+      "max_punti": 5,
+      "descrizione": "Costi Ammissibili di accumulo pari o superiori al 30% dei Costi Ammissibili di impianti fotovoltaici",
+      "formula": null
+    },
+    {
+      "codice": "3",
+      "nome": "Certificazione di Parit\u00e0 di Genere",
+      "max_punti": 5,
+      "descrizione": "Possesso della Certificazione di Parit\u00e0 di Genere alla Data della Domanda",
+      "formula": null
+    },
+    {
+      "codice": "4",
+      "nome": "Certificazione ISO 50001 / ISO 14001 / EMAS",
+      "max_punti": 5,
+      "descrizione": "Possesso alla Data della Domanda della certificazione ISO 50001, ISO 14001 o EMAS",
+      "formula": null
+    }
+  ],
+  "criterio_tiebreak": null,
+  "allegati_obbligatori": [
+    "Proposta progettuale resa dal Tecnico Abilitato",
+    "Relazione tecnica ex ante",
+    "Computo metrico estimativo relativo a tutti i Costi Ammissibili rientranti nelle Voci di Costo A, B e C",
+    "Elaborati grafici ex ante ed ex post",
+    "Dichiarazione sugli altri sostegni pubblici ottenuti o richiesti (Modello 2)",
+    "Copia della Certificazione di Parit\u00e0 di Genere (se applicabile)",
+    "Copia della certificazione ISO 50001, ISO 14001 o EMAS (se applicabile)",
+    "Anagrafica degli impianti risultante dal GAUDI",
+    "Contratto preliminare vincolante o condizionato per autoconsumo a distanza (se applicabile)",
+    "Situazione contabile riclassificata (PMI non soggette a deposito bilancio) (se applicabile)",
+    "Polizza catastrofale (se tenuta)"
+  ],
+  "piattaforma_invio": "GeCoWEB Plus",
+  "regola_senza_soccorso": false,
+  "ordine_istruttoria": null,
+  "modalita_erogazione": "Anticipazione obbligatoria del 40% entro 60 giorni dalla Data di Concessione, garantita da Fideiussione; SAL facoltativo entro 9 mesi; saldo entro 12 mesi dalla Data di Concessione, erogato a fronte dei Costi Ammessi ed Effettivamente Sostenuti",
+  "documenti_erogazione": [
+    "Relazione asseverata da un Tecnico Abilitato sullo stato di avanzamento del Progetto",
+    "Dichiarazione sugli altri sostegni pubblici ottenuti o richiesti (Modello 2)",
+    "Documentazione di contratti, Titoli di Spesa e attestazioni di pagamento relativi ai Costi Effettivamente Sostenuti",
+    "Dichiarazione di conformit\u00e0 fornita dall\u2019impianto/installatore (Regolamento DM 37/2008)",
+    "Anagrafica dell\u2019impianto realizzata come risultante dal GAUDI",
+    "Copia completa della documentazione sul Progetto come realizzato presentata a corredo della domanda di connessione",
+    "Licenza di officina elettrica per potenza superiore a 20 kW"
+  ],
+  "condizioni_revoca": [
+    "Mancata trasmissione dell\u2019Atto di Impegno sottoscritto o delle informazioni ai sensi dell\u2019Antimafia entro i termini",
+    "Mancato rispetto del possesso, acquisizione e mantenimento dei requisiti soggettivi",
+    "Dichiarazioni mendaci ai sensi del D.P.R. 445/2000",
+    "Mancata presentazione delle richieste di erogazione obbligatorie e della documentazione entro i termini",
+    "Il Progetto non conforme alle previsioni dell\u2019Avviso o con punteggio inferiore a 40",
+    "Mancato consenso a controlli o riscontro di irregolarit\u00e0",
+    "Delocalizzazione dell\u2019attivit\u00e0 beneficiaria fuori dal Lazio entro 5 anni dall\u2019erogazione del saldo",
+    "Delocalizzazione dell\u2019attivit\u00e0 fuori dagli EEAS entro 10 anni dall\u2019erogazione del saldo",
+    "Cessazione dell\u2019attivit\u00e0 entro 5 anni dall\u2019erogazione, salvo fallimento non fraudolento",
+    "Alienazione/Ceduta/Distrazione degli Investimenti entro 5 anni; riduzione proporzionale del contributo se sostituito",
+    "Ordine di recupero pendente a seguito di decisione UE che dichiara Aiuto illegale",
+    "Irregolarit\u00e0 imputabili al Beneficiario",
+    "Altre violazioni di legge previste dall\u2019Avviso",
+    "Mancato rispetto degli obblighi dell\u2019Avviso o dell\u2019Atto di Impegno"
+  ],
+  "file_name": "7c12a1a4-94eb-4fb1-aef9-eac162727388_DD_G16732_2025_Bando.pdf",
+  "pagine_totali": null,
+  "data_processing": "2025-12-24T00:14:44.379417",
+  "fonte": null
+}

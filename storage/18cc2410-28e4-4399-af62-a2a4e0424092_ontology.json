@@ -1,0 +1,230 @@
+{
+  "id": "4cd1b66d-ca65-4938-a620-fdc04ae63c99",
+  "identificativo": "Ri.Circo.Lo.- Risorse Circolari in Lombardia per il sostegno alle PMI lombarde per lo sviluppo di azioni di economia circolare. Edizione dedicata alla prevenzione e riciclaggio dei rifiuti alimentari SA.119795",
+  "autorita": "Regione Lombardia - Direzione Generale Ambiente e Clima",
+  "soggetto_attuatore": "Regione Lombardia - Dirigenza Ambiente e Clima",
+  "dotazione_finanziaria": 2300000.0,
+  "regime_aiuto": "GBER o de minimis",
+  "tematiche": [
+    "Economia Circolare",
+    "Sostenibilit\u00e0",
+    "Innovazione"
+  ],
+  "tipologie_fondo": [
+    "Europei",
+    "Nazionali",
+    "Regional"
+  ],
+  "tipologie_agevolazione": [
+    "A Fondo perduto",
+    "de minimis",
+    "GBER"
+  ],
+  "destinatari": [
+    "PMI",
+    "PMI innovative",
+    "Startup e spinoff",
+    "Startup innovative",
+    "Micro-imprese",
+    "Medie Imprese",
+    "Aggregazioni d'impresa"
+  ],
+  "data_apertura_formulario": "2025-10-15T09:00:00",
+  "data_inizio_domande": "2025-10-15T09:00:00",
+  "data_fine_domande": "2025-12-22T16:00:00",
+  "piattaforma_presentazione": "www.bandi.regione.lombardia.it",
+  "dimensioni_ammesse": [
+    "Piccola impresa",
+    "Media impresa"
+  ],
+  "requisiti_beneficiario": [
+    "PMI regolarmente costituite, iscritte ed attive nel Registro delle Imprese",
+    "presentino progetti in forma singola o in aggregazione",
+    "interventi realizzati su sedi operative ubicate sul territorio lombardo",
+    "non rientrino negli specifici casi di esclusione (art. 7 Regolamento UE 2021/1058)",
+    "possono partecipare in forma aggregata con capofila; ipotesi di modifica dell\u2019inquadramento previa accettazione del beneficiario"
+  ],
+  "sede_obbligatoria": null,
+  "attributi_bonus": [],
+  "tipologie_intervento": [],
+  "sottotipologie_cloud": [],
+  "importo_minimo_progetto": 40000.0,
+  "tempo_realizzazione_mesi": 24,
+  "esclusioni": [
+    "Spese per affitti di terreni, fabbricati e immobili",
+    "Spese sostenute mediante operazioni di leasing e/o noleggio",
+    "Spese non riconducibili alle voci di spesa indicate al paragrafo B.3",
+    "Costi non funzionalmente collegati al progetto o alle sedi operative dichiarate",
+    "Spese non comprovate da fatture quietanzate o documentazione equivalente"
+  ],
+  "interventi": [
+    {
+      "tipo": "Intervento",
+      "nome": "Sostegno ad azioni di simbiosi industriale, prevenzione produzione rifiuti, riciclaggio e riutilizzo per la chiusura del ciclo",
+      "descrizione": "Ri.Circo.Lo. Edizione dedicata alla prevenzione e riciclaggio dei rifiuti alimentari (Asse II PR FESR Lombardia 2021-2027, Azione 2.6.2)",
+      "restrizioni": [
+        "DNSH"
+      ]
+    }
+  ],
+  "natura_contributo": "Sovvenzione a fondo perduto",
+  "importi_unitari": {},
+  "massimali_dimensione": {},
+  "incompatibilita_aiuti": true,
+  "criteri_selezione": [
+    {
+      "codice": "C1",
+      "nome": "Qualit\u00e0 dell'iniziativa",
+      "max_punti": 6,
+      "descrizione": "Qualit\u00e0 progettuale; innovativit\u00e0 ed efficacia; coerenza dei costi; coerenza dei tempi di realizzazione; replicabilit\u00e0 e scalabilit\u00e0",
+      "formula": null
+    },
+    {
+      "codice": "C2",
+      "nome": "Contenuti tecnico/scientifici",
+      "max_punti": 6,
+      "descrizione": "Azioni e tecnologie basate su contenuti tecnico-scientifici rilevanti per garantire il successo del progetto",
+      "formula": null
+    },
+    {
+      "codice": "C3",
+      "nome": "Grado e tipo di innovazione",
+      "max_punti": 6,
+      "descrizione": "Innovazione delle tecnologie e affidabilit\u00e0 per il raggiungimento dei risultati",
+      "formula": null
+    },
+    {
+      "codice": "C4",
+      "nome": "Coerenza dei costi di realizzazione",
+      "max_punti": 9,
+      "descrizione": "Coerenza tra costi di realizzazione e obiettivi di intervento; validit\u00e0 economico-finanziaria",
+      "formula": null
+    },
+    {
+      "codice": "C5",
+      "nome": "Quantificazione dei risultati attesi",
+      "max_punti": 20,
+      "descrizione": "Quantificazione di risparmi di risorse, riduzione rifiuti, riciclo e risparmio energetico",
+      "formula": null
+    },
+    {
+      "codice": "C6",
+      "nome": "Percentuale di cofinanziamento",
+      "max_punti": 4,
+      "descrizione": "Cofinanziamento dall\u2019impresa/aggregazione rispetto al totale dei costi ammissibili",
+      "formula": null
+    },
+    {
+      "codice": "C7",
+      "nome": "Coerenza dei tempi di realizzazione",
+      "max_punti": 4,
+      "descrizione": "Coerenza tra tempi di realizzazione e autorizzazioni necessarie",
+      "formula": null
+    },
+    {
+      "codice": "C8",
+      "nome": "Replicabilit\u00e0",
+      "max_punti": 3,
+      "descrizione": "Potenzialit\u00e0 di replicabilit\u00e0 del progetto",
+      "formula": null
+    },
+    {
+      "codice": "C9",
+      "nome": "Scalabilit\u00e0",
+      "max_punti": 3,
+      "descrizione": "Possibilit\u00e0 di espansione su una scala maggiore",
+      "formula": null
+    },
+    {
+      "codice": "C10",
+      "nome": "Capacit\u00e0 di riduzione delle emissioni CO2 evitate",
+      "max_punti": 6,
+      "descrizione": "Valutazione delle emissioni evitate lungo l\u2019intero ciclo di vita",
+      "formula": null
+    },
+    {
+      "codice": "P1",
+      "nome": "Premialit\u00e0 a) Partecipazione della PMI ad accordi con enti di ricerca",
+      "max_punti": 3,
+      "descrizione": "Coinvolgimento di enti di ricerca; presenza di accordi formali",
+      "formula": null
+    },
+    {
+      "codice": "P2",
+      "nome": "Premialit\u00e0 b) Studi di Life Cycle Assessment o Product Environmental Footprint",
+      "max_punti": 3,
+      "descrizione": "Presenza di studi LCA/PEF a supporto del progetto",
+      "formula": null
+    },
+    {
+      "codice": "P3",
+      "nome": "Premialit\u00e0 c) Certificazioni ISO 14001/ISO 50001 o EMAS",
+      "max_punti": 2,
+      "descrizione": "Certificazioni ambientali a supporto dell\u2019organizzazione",
+      "formula": null
+    },
+    {
+      "codice": "P4",
+      "nome": "Premialit\u00e0 d) Startup e/o PMI innovativa",
+      "max_punti": 2,
+      "descrizione": "Presenza di impresa/startup innovativa nel progetto",
+      "formula": null
+    },
+    {
+      "codice": "P5",
+      "nome": "Premialit\u00e0 e) Rilevanza componente femminile",
+      "max_punti": 1,
+      "descrizione": "Presenza di almeno il 30% di lavoratrici femminili nel team",
+      "formula": null
+    },
+    {
+      "codice": "P6",
+      "nome": "Premialit\u00e0 f) Rilevanza componente giovanile",
+      "max_punti": 1,
+      "descrizione": "Presenza di almeno il 30% di lavoratori under 36 nel team",
+      "formula": null
+    }
+  ],
+  "criterio_tiebreak": null,
+  "allegati_obbligatori": [
+    "ALLEGATO A \u2013 Schema tipo di accordo di progetto",
+    "ALLEGATO B.1 - Modulo per la concessione di aiuti in \u00abde minimis\u00bb",
+    "ALLEGATO B.2 \u2013 Modulo per la concessione di aiuti ex Regolamento GBER",
+    "ALLEGATO B.3 - Dichiarazione di sostenibilit\u00e0 finanziaria",
+    "ALLEGATO C.1 \u2013 Schema di relazione tecnica di progetto",
+    "ALLEGATO C.2 \u2013 Formulario per la verifica climatica di resilienza degli edifici e delle infrastrutture",
+    "ALLEGATO C.3.a - Scheda di verifica di conformit\u00e0 alle ammissibilit\u00e0 ambientali (principio DNSH) - ADESIONE",
+    "ALLEGATO C.3.b - Scheda di verifica di conformit\u00e0 alle ammissibilit\u00e0 ambientali (principio DNSH) - RENDICONTAZIONE",
+    "ALLEGATO D - Dichiarazione di possesso dei requisiti di impresa startup innovativa",
+    "ALLEGATO E - Dichiarazione di possesso dei requisiti di societ\u00e0 PMI innovativa e autocertificazione della veridicit\u00e0 delle informazioni",
+    "ALLEGATO F - Dichiarazione rilevanza componente femminile",
+    "ALLEGATO G - Dichiarazione rilevanza giovanile nel team di progetto",
+    "ALLEGATO H - Scheda di sintesi finale del progetto",
+    "ALLEGATO I \u2013 Linee guida per la rendicontazione dei progetti",
+    "ALLEGATO L \u2013 Informativa relativa al trattamento dei dati personali"
+  ],
+  "piattaforma_invio": "BeS - Bandi e Servizi Regione Lombardia",
+  "regola_senza_soccorso": false,
+  "ordine_istruttoria": null,
+  "modalita_erogazione": null,
+  "documenti_erogazione": [
+    "Relazione finale di Progetto",
+    "Prospetto delle spese sostenute con fatture e quietanze",
+    "Dichiarazione DNSH (Allegato C.3.b)",
+    "Dichiarazione di conformit\u00e0 a verifica climatica (Allegato C.2)",
+    "Dichiarazione antimafia ove richiesta",
+    "ID Progetto e CUP riportati nelle fatture"
+  ],
+  "condizioni_revoca": [
+    "Inosservanza degli obblighi del bando",
+    "Inosservanza della normativa sugli aiuti di Stato",
+    "Rinuncia o mancata documentazione entro i termini",
+    "Realizzazione del progetto non conforme",
+    "Varianti che riducano il punteggio al di sotto di 50 punti",
+    "Dichiarazioni false o gravemente inesatte"
+  ],
+  "file_name": "18cc2410-28e4-4399-af62-a2a4e0424092_decreto 12286 del 09 09 2025 unito.pdf",
+  "pagine_totali": null,
+  "data_processing": "2025-12-24T00:22:55.748174",
+  "fonte": null
+}
