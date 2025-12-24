@@ -19,3 +19,4 @@ uploads/
 *.log
 *.db
 storage
+test.py
