@@ -1,6 +1,4 @@
 from dotenv import load_dotenv
-load_dotenv()
-
 from celery import Celery
 import os
 import requests
@@ -16,23 +14,22 @@ from dotenv import load_dotenv
 from neo4j import GraphDatabase
 from pydantic import BaseModel, Field
 from sentence_transformers import SentenceTransformer
-
 from qdrant_client import QdrantClient, models
-from celery import group, chain
-
 from doctr.io import read_pdf
 from doctr.models import ocr_predictor
+from database import update_job_status, init_db
 
+init_db()
 # ==========================
 # OpenAI / Regolo config
 # ==========================
-
+load_dotenv()
 REGOLO_API_URL = "https://api.openai.com/v1/chat/completions"
 REGOLO_KEY = os.getenv("OPENAI_API_KEY")
 
 # ⚠️ USA UN MODELLO VALIDO
-REGOLO_MODEL = "gpt-5-nano"
-load_dotenv()
+REGOLO_MODEL = "gpt-4.1-nano"
+
 
 qdrant_url = os.getenv("QDRANT_URL")
 qdrant_client = QdrantClient(url=qdrant_url)   #Qdrant
@@ -45,6 +42,7 @@ neo4j_uri = os.getenv("NEO4J_URI")
 neo4j_username = os.getenv("NEO4J_USERNAME", "neo4j")      #Neo4j
 neo4j_password = os.getenv("NEO4J_PASSWORD", "password")
 neo4j_driver = GraphDatabase.driver(neo4j_uri, auth=(neo4j_username, neo4j_password))
+
 
 if not REGOLO_KEY:
     raise RuntimeError("OPENAI_API_KEY non impostata")
@@ -88,7 +86,7 @@ class BandoOntology(BaseModel):
     # B. Beneficiario
     dimensioni_ammesse: List[str] = []  
     requisiti_beneficiario: List[str] = []  
-    sede_obbligatoria: Optional[str] = None  # Diventa nodo unico Localizzazione
+    sede_obbligatoria: List[str] = []  # Diventa nodo unico Localizzazione
     
     # Attributi bonus
     attributi_bonus: List[str] = []  
@@ -384,8 +382,9 @@ Analizza il seguente bando e estrai TUTTE le informazioni strutturate seguendo l
 2. Per le date, converti in formato ISO 8601 se possibile: "16/10/2025 h 12:00" → "2025-10-16T12:00:00"
 3. Per gli importi, rimuovi '€' e converti in numero float: "€ 15.000.000" → 15000000.0
 4. Per le liste, includi tutti gli elementi rilevanti trovati nel testo.
-5. Se un campo non è presente, lascia null o lista vuota.
-6. Identificativo è il nome del bando
+5. Rispetta le modalità di input che ti vengono date
+6. Se un campo non è presente, lascia null o lista vuota.
+7. Identificativo è il nome del bando
 
 **NUOVE CATEGORIE IMPORTANTI:**
 
@@ -422,10 +421,13 @@ Analizza il seguente bando e estrai TUTTE le informazioni strutturate seguendo l
      "Ricercatori", "Scuole e studenti", "Startup e spinoff", 
      "Startup innovative", "Università e ricerca"
 
-10. **SEDE OBBLIGATORIA** (Regione, anche se non specificata):
-    - NON PUò essere null
-    - Solo il nome della regione: ES: "Lazio", non "Regione Lazio". MA POSSONO ESSERCI ALTRE REGIONI
-    - Per stati: "Italia", non "Stato italiano"
+10. **SEDE OBBLIGATORIA** (MULTIPLA - può essere più di una):
+    - PUÒ essere una lista vuota [] se non specificato
+    - Se sono indicate più regioni o aree geografiche, includile TUTTE
+    - Formato: lista di nomi di regioni/città (ES: ["Lazio", "Campania", "Milano"])
+    - Solo il nome della regione/città: ES: "Lazio", non "Regione Lazio"
+    - Per stati: "Italia"
+    - Non abbreviare: "Lombardia" non "LO"
 
 **STRUTTURA JSON OBBLIGATORIA:**
 {{
@@ -435,6 +437,7 @@ Analizza il seguente bando e estrai TUTTE le informazioni strutturate seguendo l
   "tipologie_fondo": ["lista di stringhe"],  # NUOVO
   "tipologie_agevolazione": ["lista di stringhe"],  # NUOVO
   "destinatari": ["lista di stringhe"],  # NUOVO
+  "sede_obbligatoria": ["lista di stringhe"],  # CAMBIATO: ora è una lista
   "soggetto_attuatore": "string | null",
   "dotazione_finanziaria": "number | null",
   "regime_aiuto": "string | null",
@@ -444,11 +447,10 @@ Analizza il seguente bando e estrai TUTTE le informazioni strutturate seguendo l
   "piattaforma_presentazione": "string | null",
   "dimensioni_ammesse": ["lista di stringhe"],
   "requisiti_beneficiario": ["lista di stringhe"],
-  "sede_obbligatoria": "string",
   "attributi_bonus": ["lista di stringhe"],
   "tipologie_intervento": ["lista di stringhe"],
-  "importo_minimo_progetto": "number | null",
-  "tempo_realizzazione_mesi": "number | null",
+  "importo_minimo_progetto": "float | null",
+  "tempo_realizzazione_mesi": "int | null",
   "esclusioni": ["lista di stringhe"],
   "interventi": [
     {{
@@ -491,7 +493,6 @@ def extract_ontology_from_text(full_text: str) -> BandoOntology:
     """Estrae l'ontologia completa dal testo usando una singola chiamata LLM."""
     prompt = build_ontology_prompt_complete(full_text)
     response = regolo_call(prompt)
-    print(response)
     
     if not response:
         raise ValueError("Risposta vuota dal LLM")
@@ -539,7 +540,7 @@ def create_ontology_graph(ontology: BandoOntology) -> Tuple[Dict[str, str], List
         "importo_minimo_progetto": ontology.importo_minimo_progetto,
         "tempo_realizzazione_mesi": ontology.tempo_realizzazione_mesi,
         "file_name": ontology.file_name,
-       
+        "sede_obbligatoria": ontology.sede_obbligatoria  # Ora sarà una lista
     }
     bando_attrs = {k: v for k, v in bando_attrs.items() if v is not None}
 
@@ -557,6 +558,7 @@ def create_ontology_graph(ontology: BandoOntology) -> Tuple[Dict[str, str], List
             nodes[node_name] = node_id
         
         return node_id 
+    
     # 3. NODI TEMATICHE (multiple, ognuna unica)
     for tematica in ontology.tematiche:
         tematica_id = create_unique_node("Tematica", tematica)
@@ -597,17 +599,17 @@ def create_ontology_graph(ontology: BandoOntology) -> Tuple[Dict[str, str], List
             "attributes": {}
         })
     
-    # 7. NODO LOCALIZZAZIONE (UNICO)
-    if ontology.sede_obbligatoria:
-        loc_id = create_unique_node("Localizzazione", ontology.sede_obbligatoria)
+    # 7. NODI LOCALIZZAZIONE (MULTIPLI - ora è una lista)
+    for sede in ontology.sede_obbligatoria:
+        loc_id = create_unique_node("Localizzazione", sede)
         relationships.append({
             "source": bando_id,
             "target": loc_id,
             "type": "LIMITATO_A_AREA",
-            "attributes": {"area": ontology.sede_obbligatoria}
+            "attributes": {"area": sede}
         })
     
-    # 4. NODI PER DIMENSIONI AMMESSE (questi possono rimanere duplicati se necessario)
+    # 8. NODI PER DIMENSIONI AMMESSE
     for dim in ontology.dimensioni_ammesse:
         dim_name = f"DIMENSIONE: {dim}"
         dim_id = str(uuid.uuid4())
@@ -911,13 +913,12 @@ def ingest_to_qdrant(
         ]
         add_unique_node_if_relevant("DESTINATARIO", ontology.destinatari, destinatario_keywords)
         
-        # 5. LOCALIZZAZIONE
-        if ontology.sede_obbligatoria:
-            loc_name = f"LOCALIZZAZIONE: {ontology.sede_obbligatoria}"
-            if loc_name in nodes_dict:
-                # Cerca regione nel chunk (case insensitive)
-                if any(word.lower() in chunk_lower for word in ontology.sede_obbligatoria.split()):
-                    node_ids.append(nodes_dict[loc_name])
+        # 5. LOCALIZZAZIONI (MULTIPLE)
+        localizzazione_keywords = ["sede", "localizzazione", "regione", "territorio", "area", 
+                                   "geografico", "comune", "provincia", "ambito territoriale"]
+        add_unique_node_if_relevant("LOCALIZZAZIONE", ontology.sede_obbligatoria, localizzazione_keywords)
+        
+       
         
         # 6. DIMENSIONI AMMESSE
         for dimensione in ontology.dimensioni_ammesse:
@@ -1018,92 +1019,101 @@ def ingest_to_qdrant(
 # Task principale decorato
 # ==========================
 
-processing_status = {}
+processing_status= {}
 
 @celery_app.task(bind=True, max_retries=3)
 def process_document_pipeline(self, job_id: str, pdf_path: str, collection_name: str = "Bandi"):
     """
     Task principale decorato che esegue tutta la pipeline in serie.
-    Il parallelismo sarà gestito a livello superiore chiamando questo task in gruppo.
     """
     try:
-        # Inizializza stato
-        self.update_state(
-            state='PROGRESS', 
-            meta={
-                'status': 'processing', 
-                'progress': 'Lettura PDF...',
-                'job_id': job_id
+        # 1. INIZIALIZZA STATO nel database
+          # Importa le funzioni del DB
+        
+        update_job_status(
+            job_id=job_id,
+            status="processing",
+            progress="Lettura PDF...",
+            data={
+                "collection_name": collection_name,
+                "filename": os.path.basename(pdf_path),
+                "job_id": job_id
             }
         )
         
-        # 1. Estrazione testo
+        # 2. Estrazione testo
         raw_data = extract_pdf_text_with_tables(pdf_path)
         
-        # 2. Normalizzazione
+        # 3. Normalizzazione
         clean_data = normalize_whitespace(raw_data)
         
-        self.update_state(
-            state='PROGRESS',
-            meta={
-                'status': 'processing',
-                'progress': 'Estrazione ontologia strutturata (1 chiamata LLM)...',
-                'job_id': job_id
+        # AGGIORNA STATO nel database
+        update_job_status(
+            job_id=job_id,
+            status="processing",
+            progress="Estrazione ontologia strutturata (1 chiamata LLM)...",
+            data={
+                "collection_name": collection_name,
+                "filename": os.path.basename(pdf_path),
+                "step": "ontology_extraction"
             }
         )
         
-        # 3. Estrazione ontologia
+        # 4. Estrazione ontologia
         ontology = extract_ontology_from_text(clean_data)
         ontology.file_name = os.path.basename(pdf_path)
         
-        self.update_state(
-            state='PROGRESS',
-            meta={
-                'status': 'processing',
-                'progress': 'Creazione grafo ontologico...',
-                'job_id': job_id,
-                'details': {
-                    'identificativo': ontology.identificativo,
-                    'dimensioni_ammesse': ontology.dimensioni_ammesse,
-                    'tipologie_intervento': ontology.tipologie_intervento,
-                    'criteri_count': len(ontology.criteri_selezione)
-                }
+        # AGGIORNA STATO con dettagli
+        update_job_status(
+            job_id=job_id,
+            status="processing",
+            progress="Creazione grafo ontologico...",
+            data={
+                "identificativo": ontology.identificativo,
+                "dimensioni_ammesse": ontology.dimensioni_ammesse,
+                "tipologie_intervento": ontology.tipologie_intervento,
+                "criteri_count": len(ontology.criteri_selezione),
+                "step": "graph_creation"
             }
         )
         
-        # 4. Creazione grafo
+        # 5. Creazione grafo
         nodes, relationships, bando_attrs = create_ontology_graph(ontology)
         
-        self.update_state(
-            state='PROGRESS',
-            meta={
-                'status': 'processing',
-                'progress': 'Creazione chunk per ricerca semantica...',
-                'job_id': job_id,
-                'graph_created': True
+        # AGGIORNA STATO
+        update_job_status(
+            job_id=job_id,
+            status="processing",
+            progress="Creazione chunk per ricerca semantica...",
+            data={
+                "graph_created": True,
+                "nodes_count": len(nodes),
+                "relationships_count": len(relationships),
+                "step": "chunking"
             }
         )
         
-        # 5. Chunking
+        # 6. Chunking
         chunks = chunk_text(clean_data, max_words=250, overlap_words=35)
         
-        self.update_state(
-            state='PROGRESS',
-            meta={
-                'status': 'processing',
-                'progress': 'Salvataggio in database...',
-                'job_id': job_id,
-                'chunks_created': len(chunks)
+        # AGGIORNA STATO
+        update_job_status(
+            job_id=job_id,
+            status="processing",
+            progress="Salvataggio in database...",
+            data={
+                "chunks_created": len(chunks),
+                "step": "database_saving"
             }
         )
         
-        # 6. ESECUZIONE IN SERIE: Neo4j + Qdrant
-        self.update_state(
-            state='PROGRESS',
-            meta={
-                'status': 'processing',
-                'progress': 'Salvataggio in Neo4j...',
-                'job_id': job_id
+        # 7. Salva in Neo4j
+        update_job_status(
+            job_id=job_id,
+            status="processing",
+            progress="Salvataggio in Neo4j...",
+            data={
+                "step": "neo4j_saving"
             }
         )
         
@@ -1117,12 +1127,13 @@ def process_document_pipeline(self, job_id: str, pdf_path: str, collection_name:
             bando_attrs=bando_attrs
         )
         
-        self.update_state(
-            state='PROGRESS',
-            meta={
-                'status': 'processing',
-                'progress': 'Salvataggio in Qdrant...',
-                'job_id': job_id
+        # AGGIORNA STATO
+        update_job_status(
+            job_id=job_id,
+            status="processing",
+            progress="Salvataggio in Qdrant...",
+            data={
+                "step": "qdrant_saving"
             }
         )
         
@@ -1134,13 +1145,13 @@ def process_document_pipeline(self, job_id: str, pdf_path: str, collection_name:
             nodes_dict=nodes
         )
         
-        # 7. Salva metadata e ontologia
-        self.update_state(
-            state='PROGRESS',
-            meta={
-                'status': 'processing',
-                'progress': 'Salvataggio metadata...',
-                'job_id': job_id
+        # 8. Salva metadata e ontologia
+        update_job_status(
+            job_id=job_id,
+            status="processing",
+            progress="Salvataggio metadata...",
+            data={
+                "step": "metadata_saving"
             }
         )
         
@@ -1152,8 +1163,8 @@ def process_document_pipeline(self, job_id: str, pdf_path: str, collection_name:
         with open(ontology_file, 'w') as f:
             json.dump(ontology.model_dump(), f, indent=2, default=str)
         
-        # Risultato finale
-        result = {
+        # 9. RISULTATO FINALE - AGGIORNA STATO NEL DATABASE
+        final_result = {
             "status": "completed",
             "progress": "Completato!",
             "job_id": job_id,
@@ -1161,7 +1172,7 @@ def process_document_pipeline(self, job_id: str, pdf_path: str, collection_name:
             "chunks_count": len(chunks),
             "nodes_count": len(nodes),
             "relationships_count": len(relationships),
-            "qdrant_points": len(chunks),  # Numero di punti Qdrant = numero di chunks
+            "qdrant_points": len(chunks),
             "ontology": {
                 "identificativo": ontology.identificativo,
                 "autorita": ontology.autorita,
@@ -1169,24 +1180,44 @@ def process_document_pipeline(self, job_id: str, pdf_path: str, collection_name:
                 "interventi": len(ontology.interventi),
                 "criteri": len(ontology.criteri_selezione)
             },
-            "bando_attributes": bando_attrs
+            "bando_attributes": bando_attrs,
+            "filename": os.path.basename(pdf_path)
         }
         
-        # Aggiorna stato globale
-        if 'processing_status' in globals():
-            processing_status[job_id] = result
+        # Aggiorna stato nel database
+        update_job_status(
+            job_id=job_id,
+            status="completed",
+            progress="Completato!",
+            data=final_result
+        )
         
-        return result
+        return final_result
         
     except Exception as e:
-        error_result = {
+        import traceback
+        error_trace = traceback.format_exc()
+        traceback.print_exc()
+        
+        # AGGIORNA STATO CON ERRORE nel database
+        error_data = {
             "status": "error",
-            "progress": "Errore!",
+            "progress": "Errore durante l'elaborazione",
             "job_id": job_id,
-            "error": str(e)
+            "error": str(e),
+            "traceback": error_trace,
+            "filename": os.path.basename(pdf_path),
+            "timestamp": datetime.now().isoformat()
         }
         
-        if 'processing_status' in globals():
-            processing_status[job_id] = error_result
+        try:
+            update_job_status(
+                job_id=job_id,
+                status="error",
+                progress="Errore!",
+                data=error_data
+            )
+        except Exception as db_error:
+            print(f"Errore nel salvataggio stato errore: {db_error}")
         
-        raise self.retry(exc=e, countdown=60)
+        raise self.retry(exc=e, countdown=3)

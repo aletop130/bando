@@ -62,7 +62,7 @@ function App() {
       alert('Seleziona almeno un file PDF')
       return
     }
-
+  
     setUploading(true)
     const newJobStatuses: JobStatus[] = files.map(file => ({
       jobId: '',
@@ -71,42 +71,100 @@ function App() {
       progress: 'In preparazione...'
     }))
     setJobStatuses(newJobStatuses)
-
+  
     try {
-      // Upload multiplo: una chiamata per ogni file
-      const uploadPromises = files.map(async (file, index) => {
-        const formData = new FormData()
-        formData.append('file', file)
-        
-        const response = await axios.post<UploadResponse>(`${API_BASE}/upload`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        })
-
-        // Aggiorna lo stato del job
-        setJobStatuses(prev => prev.map((job, idx) => 
-          idx === index 
-            ? { ...job, jobId: response.data.job_id, status: 'queued', progress: 'In coda...' }
-            : job
-        ))
-
-        return response.data.job_id
-      })
-
-      const jobIds = await Promise.all(uploadPromises)
+      const formData = new FormData()
       
-      // Avvia il polling per ogni job
-      jobIds.forEach((jobId, index) => {
-        pollStatus(jobId, index)
+      // IMPORTANTE: Usa lo stesso nome che il backend si aspetta
+      if (files.length === 1) {
+        // Singolo file
+        formData.append('file', files[0])
+      } else {
+        // Multipli file - ognuno con lo stesso nome 'file'
+        files.forEach(file => {
+          formData.append('file', file)
+        })
+      }
+      
+      // Aggiungi collection_name se supportato
+      formData.append('collection_name', activeCollection)
+      
+      console.log('Invio FormData con', files.length, 'file(s)')
+      
+      // Prova diverse strategie:
+      const response = await axios.post(`${API_BASE}/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        // Aggiungi timeout
+        timeout: 30000,
       })
+  
+      console.log('Risposta dal server:', response.data)
+      
+      // Gestisci la risposta in base al formato
+      const responseData = response.data
+      
+      if (Array.isArray(responseData)) {
+        // Risposta multipla
+        setJobStatuses(prev => prev.map((job, index) => {
+          const uploadResp = responseData[index]
+          return {
+            ...job,
+            jobId: uploadResp.job_id || uploadResp.jobId,
+            status: 'queued',
+            progress: 'In coda...'
+          }
+        }))
+        
+        // Avvia polling per ogni job
+        responseData.forEach((uploadResp, index) => {
+          if (uploadResp.job_id || uploadResp.jobId) {
+            pollStatus(uploadResp.job_id || uploadResp.jobId, index)
+          }
+        })
+      } else {
+        // Risposta singola
+        setJobStatuses(prev => prev.map((job, index) => {
+          if (index === 0) {
+            return {
+              ...job,
+              jobId: responseData.job_id || responseData.jobId,
+              status: 'queued',
+              progress: 'In coda...'
+            }
+          }
+          return job
+        }))
+        
+        if (responseData.job_id || responseData.jobId) {
+          pollStatus(responseData.job_id || responseData.jobId, 0)
+        }
+      }
       
     } catch (error) {
-      console.error('Errore upload:', error)
-      const errorMessage = axios.isAxiosError(error) 
-        ? error.message 
-        : 'Errore sconosciuto durante il caricamento'
-      alert('Errore durante il caricamento: ' + errorMessage)
+      console.error('Errore dettagliato upload:', error)
+      
+      if (axios.isAxiosError(error)) {
+        console.error('Status:', error.response?.status)
+        console.error('Data:', error.response?.data)
+        console.error('Headers:', error.response?.headers)
+        
+        let errorMessage = 'Errore durante il caricamento'
+        
+        if (error.response?.status === 422) {
+          errorMessage = 'Errore di validazione: ' + JSON.stringify(error.response.data)
+        } else if (error.response?.data?.detail) {
+          errorMessage = error.response.data.detail
+        } else {
+          errorMessage = error.message
+        }
+        
+        alert(errorMessage)
+      } else {
+        alert('Errore sconosciuto durante il caricamento')
+      }
+      
       setUploading(false)
     }
   }
@@ -121,33 +179,36 @@ function App() {
           idx === index 
             ? { 
                 ...job, 
-                status: newStatus.status, 
+                status: newStatus.status as ProcessingStatus, 
                 progress: newStatus.progress,
                 error: newStatus.error
               }
             : job
         ))
         
-        if (newStatus.status === 'completed') {
+        if (newStatus.status === 'completed' || newStatus.status === 'error') {
           clearInterval(interval)
           
           // Controlla se tutti i job sono completati
-          const allCompleted = jobStatuses.every(job => 
-            job.status === 'completed' || (job.jobId === jobId && newStatus.status === 'completed')
-          )
-          
-          if (allCompleted && !chatStarted) {
-            setUploading(false)
-            setMessages([{
-              role: 'assistant',
-              content: `✅ ${jobStatuses.length} documento(i) processati con successo! Ora puoi farmi domande sui bandi.`
-            }])
-            setChatStarted(true)
-            fetchCollections() // Aggiorna la lista delle collections
-          }
-        } else if (newStatus.status === 'error') {
-          clearInterval(interval)
-          console.error(`Errore nel job ${jobId}:`, newStatus.error)
+          setTimeout(() => {
+            setJobStatuses(prev => {
+              const allJobs = [...prev]
+              const allCompleted = allJobs.every(job => 
+                job.status === 'completed' || job.status === 'error'
+              )
+              
+              if (allCompleted && !chatStarted) {
+                setUploading(false)
+                setMessages([{
+                  role: 'assistant',
+                  content: `✅ ${getCompletionCount()} documento(i) processati con successo! Ora puoi farmi domande sui bandi.`
+                }])
+                setChatStarted(true)
+                fetchCollections()
+              }
+              return allJobs
+            })
+          }, 500)
         }
       } catch (error) {
         console.error('Errore polling status:', error)

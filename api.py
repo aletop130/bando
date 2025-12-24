@@ -8,6 +8,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from celery_app import process_document_pipeline
 from typing import Union
+from database import init_db, get_db, update_job_status, get_job_status
 from graph_rag_pipeline import (
     retrieve_graph_context,       # GraphRAG
     graphRAG_run_with_history,       
@@ -16,6 +17,8 @@ from graph_rag_pipeline import (
     qdrant_client,                # Clients
     VECTOR_DIM,
 )
+
+init_db()
 
 # Classi
 
@@ -78,7 +81,7 @@ os.makedirs(STORAGE_DIR, exist_ok=True)
 
 processing_status = {}
 
-@app.post("/upload")
+@app.post("/upload", response_model=Union[UploadResponse, List[UploadResponse]])
 async def upload_document(
     file: Union[UploadFile, List[UploadFile]] = File(...),
     collection_name: str = "Bandi"
@@ -131,11 +134,11 @@ async def upload_document(
         tasks.append(task)
         
         # Prepara risposta per questo file
-        response_data = {
-            "job_id": job_id,
-            "message": f"Documento caricato: {f.filename}",
-            "status": "queued"
-        }
+        response_data = UploadResponse(
+            job_id=job_id,
+            message=f"Documento caricato: {f.filename}",
+            status="queued"
+        )
         responses.append(response_data)
     
     # Avvia tutti i tasks in parallelo usando group
@@ -163,24 +166,27 @@ async def upload_document(
     
     # Restituisci risposta appropriata
     if is_single:
-        return responses[0]  # Singolo oggetto
+        return responses[0]  # Singolo oggetto UploadResponse
     else:
-        return responses  # Lista di oggetti
+        return responses  # Lista di UploadResponse
+
 
 
 @app.get("/status/{job_id}", response_model=StatusResponse)
 async def get_status(job_id: str):
     """Endpoint per controllare lo stato del processing"""
-    if job_id not in processing_status:
+    # Leggi dal database invece che dalla variabile in memoria
+    status_data = get_job_status(job_id)
+    
+    if not status_data:
         raise HTTPException(status_code=404, detail="Job ID non trovato")
     
-    status = processing_status[job_id]
     return StatusResponse(
         job_id=job_id,
-        status=status.get("status", "unknown"),
-        progress=status.get("progress"),
-        error=status.get("error"),
-        details=status.get("details")
+        status=status_data.get("status", "unknown"),
+        progress=status_data.get("progress"),
+        error=status_data.get("error"),
+        details=status_data.get("details")
     )
 
 

@@ -1,29 +1,18 @@
 import os
-import re
-import datetime
-import uuid
-import json
 import requests
-import hashlib
-from typing import List, Optional, Any, Dict, Tuple
-from datetime import datetime  # PyMuPDF
+from typing import List, Optional, Dict, Tuple
 from dotenv import load_dotenv
 from neo4j import GraphDatabase
-from pydantic import BaseModel, Field
 from sentence_transformers import SentenceTransformer
+from qdrant_client import QdrantClient
 
-from qdrant_client import QdrantClient, models
-from celery import group
-
-from doctr.io import read_pdf
-from doctr.models import ocr_predictor
 
 
 REGOLO_API_URL = "https://api.openai.com/v1/chat/completions"
 REGOLO_KEY = os.getenv("OPENAI_API_KEY")
 
 # ⚠️ USA UN MODELLO VALIDO
-REGOLO_MODEL = "gpt-5-nano"
+REGOLO_MODEL = "gpt-4.1-mini"
 
 #Env e Clients
 load_dotenv()
@@ -290,7 +279,7 @@ def llm_call(prompt: str, response_format: str = "text") -> str:
     """
 
     payload = {
-        "model": REGOLO_MODEL,
+        "model": "gpt-4.1",
         "messages": [
             {"role": "user", "content": prompt}
         ]
