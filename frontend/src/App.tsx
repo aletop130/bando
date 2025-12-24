@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import axios from 'axios'
 import './App.css'
-import type { ChatMessage, UploadResponse, StatusResponse, ChatRequest, ChatResponse } from './types'
+import type { ChatMessage, StatusResponse, ChatRequest, ChatResponse } from './types'
 
 const API_BASE = 'http://localhost:8000'
 
