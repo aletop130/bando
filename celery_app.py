@@ -371,6 +371,37 @@ def chunk_text(text: str, max_words: int = 800, overlap_words: int = 80) -> list
     
     return chunks
 
+
+def _merge_small_chunks(chunks: list[str], min_words: int = 50) -> list[str]:
+    """Unisce chunk troppo piccoli con quelli successivi."""
+    if len(chunks) <= 1:
+        return chunks
+    
+    merged_chunks = []
+    i = 0
+    
+    while i < len(chunks):
+        current = chunks[i]
+        current_words = len(current.split())
+        
+        # Se il chunk è abbastanza grande, mantienilo
+        if current_words >= min_words or i == len(chunks) - 1:
+            merged_chunks.append(current)
+            i += 1
+            continue
+        
+        # Altrimenti, uniscilo al chunk successivo
+        if i + 1 < len(chunks):
+            next_chunk = chunks[i + 1]
+            combined = current + '\n\n' + next_chunk
+            merged_chunks.append(combined)
+            i += 2
+        else:
+            merged_chunks.append(current)
+            i += 1
+    
+    return merged_chunks
+
 def build_ontology_prompt_complete(full_text: str) -> str:
     """Crea il prompt per estrarre l'ontologia completa con nuove categorie."""
     return f"""
@@ -378,13 +409,14 @@ Sei un esperto analista di bandi di finanziamento.
 Analizza il seguente bando e estrai TUTTE le informazioni strutturate seguendo lo schema JSON sottostante.
 
 **ISTRUZIONI CRITICHE:**
-1. Estratti SOLO informazioni presenti nel testo. Non inventare nulla.
-2. Per le date, converti in formato ISO 8601 se possibile: "16/10/2025 h 12:00" → "2025-10-16T12:00:00"
-3. Per gli importi, rimuovi '€' e converti in numero float: "€ 15.000.000" → 15000000.0
-4. Per le liste, includi tutti gli elementi rilevanti trovati nel testo.
-5. Rispetta le modalità di input che ti vengono date
-6. Se un campo non è presente, lascia null o lista vuota.
-7. Identificativo è il nome del bando
+1. Assicurati che il JSON sia corretto, ogni virgola al punto giusto, necessita di precisione.
+2. Estratti SOLO informazioni presenti nel testo. Non inventare nulla.
+3. Per le date, converti in formato ISO 8601 se possibile: "16/10/2025 h 12:00" → "2025-10-16T12:00:00"
+4. Per gli importi, rimuovi '€' e converti in numero float: "€ 15.000.000" → 15000000.0
+5. Per le liste, includi tutti gli elementi rilevanti trovati nel testo.
+6. Rispetta le modalità di input che ti vengono date
+7. Se un campo non è presente, lascia null o lista vuota.
+8. Identificativo è il nome del bando
 
 **NUOVE CATEGORIE IMPORTANTI:**
 
@@ -425,19 +457,18 @@ Analizza il seguente bando e estrai TUTTE le informazioni strutturate seguendo l
     - PUÒ essere una lista vuota [] se non specificato
     - Se sono indicate più regioni o aree geografiche, includile TUTTE
     - Formato: lista di nomi di regioni/città (ES: ["Lazio", "Campania", "Milano"])
-    - Solo il nome della regione/città: ES: "Lazio", non "Regione Lazio"
-    - Per stati: "Italia"
+    - Solo il nome della regione/città: ES: "Lazio", oppure "Lombardia" non "Regione Lazio", oppure "Regione Lombardia". Non è Corretto e il grafo sarà indecente
     - Non abbreviare: "Lombardia" non "LO"
 
 **STRUTTURA JSON OBBLIGATORIA:**
 {{
   "identificativo": "string", 
   "autorita": "string", 
-  "tematiche": ["lista di stringhe"],  # NUOVO
-  "tipologie_fondo": ["lista di stringhe"],  # NUOVO
-  "tipologie_agevolazione": ["lista di stringhe"],  # NUOVO
-  "destinatari": ["lista di stringhe"],  # NUOVO
-  "sede_obbligatoria": ["lista di stringhe"],  # CAMBIATO: ora è una lista
+  "tematiche": ["lista di stringhe"],  
+  "tipologie_fondo": ["lista di stringhe"], 
+  "tipologie_agevolazione": ["lista di stringhe"],  
+  "destinatari": ["lista di stringhe"],  
+  "sede_obbligatoria": ["lista di stringhe"], 
   "soggetto_attuatore": "string | null",
   "dotazione_finanziaria": "number | null",
   "regime_aiuto": "string | null",

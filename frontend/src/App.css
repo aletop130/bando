@@ -712,3 +712,116 @@ body {
     align-self: flex-start;
   }
 }
+/* App.css aggiuntivo */
+
+/* Upload Info Banner */
+.upload-info-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin: 1rem 0;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.upload-info-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.upload-icon {
+  font-size: 2rem;
+  background: rgba(255, 255, 255, 0.2);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-info-details {
+  flex: 1;
+}
+
+.upload-type {
+  font-size: 1.125rem;
+  margin-bottom: 0.25rem;
+}
+
+.upload-stats {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  opacity: 0.9;
+  flex-wrap: wrap;
+}
+
+.upload-hint {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* File List migliorato */
+.file-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.file-type {
+  margin-top: 0.25rem;
+}
+
+.file-type-badge {
+  font-size: 0.7rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.file-type-badge.pdf {
+  background: #dc2626;
+  color: white;
+}
+
+.file-type-badge.zip {
+  background: #059669;
+  color: white;
+}
+
+.file-type-badge.other {
+  background: #6b7280;
+  color: white;
+}
+
+/* Drag & drop hint */
+.file-input-label {
+  transition: all 0.3s;
+  border: 2px dashed #d1d5db;
+}
+
+.file-input-label:hover {
+  border-color: #6366f1;
+  background: #f8fafc;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .upload-info-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .upload-stats {
+    justify-content: center;
+  }
+}

@@ -3,6 +3,7 @@ import uuid
 import json
 from typing import Optional, List, Dict
 from pydantic import BaseModel
+from pathlib import Path
 from celery import group
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -84,13 +85,17 @@ processing_status = {}
 @app.post("/upload", response_model=Union[UploadResponse, List[UploadResponse]])
 async def upload_document(
     file: Union[UploadFile, List[UploadFile]] = File(...),
-    collection_name: str = "Bandi"
+    collection_name: str = "Bandi",
+    is_folder: bool = False  # Nuovo parametro per distinguere
 ):
     """
-    Endpoint per caricare uno o più documenti PDF.
-    Supporta sia singolo file che lista di file.
+    Endpoint migliorato che supporta:
+    - Singolo PDF
+    - Multipli PDF
+    - Cartelle (se is_folder=True e file è una lista)
     """
-    # Normalizza input in lista
+    
+    # Normalizza input
     if isinstance(file, UploadFile):
         file_list = [file]
         is_single = True
@@ -101,20 +106,28 @@ async def upload_document(
     if not file_list:
         raise HTTPException(status_code=400, detail="Nessun file caricato")
     
-    # Verifica tutti i file
-    for f in file_list:
-        if not f.filename.endswith('.pdf'):
-            raise HTTPException(status_code=400, detail=f"File {f.filename} non è un PDF")
-    
+    # Verifica e processa
     responses = []
     tasks = []
     batch_job_ids = []
     
-    # Prepara tutti i file e tasks
     for f in file_list:
+        # Controlla se è PDF
+        if not f.filename or not f.filename.lower().endswith('.pdf'):
+            if is_folder:
+                # In modalità cartella, salta i non-PDF silenziosamente
+                continue
+            else:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"File {f.filename} non è un PDF. Per caricare cartelle, usa il parametro is_folder=True"
+                )
+        
+        # Processa il file
         job_id = str(uuid.uuid4())
-        batch_job_ids.append(job_id)
-        file_path = os.path.join(STORAGE_DIR, f"{job_id}_{f.filename}")
+        filename = Path(f.filename).name  # Prende solo il nome file, non il percorso
+        
+        file_path = os.path.join(STORAGE_DIR, f"{job_id}_{filename}")
         
         # Salva il file
         with open(file_path, "wb") as file_obj:
@@ -126,7 +139,9 @@ async def upload_document(
             "status": "queued", 
             "progress": "In coda su Celery...",
             "collection_name": collection_name,
-            "filename": f.filename
+            "filename": filename,
+            "original_path": f.filename if is_folder else None,  # Mantiene percorso originale per cartelle
+            "source": "folder" if is_folder else "file"
         }
         
         # Crea task Celery
