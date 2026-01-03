@@ -28,7 +28,7 @@ REGOLO_API_URL = "https://api.openai.com/v1/chat/completions"
 REGOLO_KEY = os.getenv("OPENAI_API_KEY")
 
 # ⚠️ USA UN MODELLO VALIDO
-REGOLO_MODEL = "gpt-4.1-nano"
+REGOLO_MODEL = "gpt-4.1-mini"
 
 
 qdrant_url = os.getenv("QDRANT_URL")
@@ -156,7 +156,14 @@ celery_app.conf.update(
     worker_max_tasks_per_child=50,
     task_time_limit=2100,
     task_soft_time_limit=2000,
+    # Aggiungi queste:
+    task_reject_on_worker_lost=True,
+    task_track_started=True,
+    worker_cancel_long_running_tasks_on_connection_loss=True,
+    broker_connection_retry_on_startup=True,
 )
+
+
 
 # ==========================
 # HTTP headers
@@ -413,10 +420,11 @@ Analizza il seguente bando e estrai TUTTE le informazioni strutturate seguendo l
 2. Estratti SOLO informazioni presenti nel testo. Non inventare nulla.
 3. Per le date, converti in formato ISO 8601 se possibile: "16/10/2025 h 12:00" → "2025-10-16T12:00:00"
 4. Per gli importi, rimuovi '€' e converti in numero float: "€ 15.000.000" → 15000000.0
-5. Per le liste, includi tutti gli elementi rilevanti trovati nel testo.
-6. Rispetta le modalità di input che ti vengono date
-7. Se un campo non è presente, lascia null o lista vuota.
-8. Identificativo è il nome del bando
+5. Per le percentuali, stai attento, si tratta di bandi, tutti i valori di massimali in euro sotto <100 vanno riscritti con %
+6. Per le liste, includi tutti gli elementi rilevanti trovati nel testo.
+7. Rispetta le modalità di input che ti vengono date
+8. Se un campo non è presente, lascia null o lista vuota.
+9. Identificativo è il nome del bando
 
 **NUOVE CATEGORIE IMPORTANTI:**
 
@@ -520,7 +528,7 @@ Analizza il seguente bando e estrai TUTTE le informazioni strutturate seguendo l
 Rispondi SOLO con il JSON. Non includere testo aggiuntivo.
 """
 
-def extract_ontology_from_text(full_text: str) -> BandoOntology:
+def extract_ontology_from_text(full_text: str, doc_id: str) -> BandoOntology:
     """Estrae l'ontologia completa dal testo usando una singola chiamata LLM."""
     prompt = build_ontology_prompt_complete(full_text)
     response = regolo_call(prompt)
@@ -541,7 +549,7 @@ def extract_ontology_from_text(full_text: str) -> BandoOntology:
     try:
         data = json.loads(json_str)
         # Aggiungi metadata mancanti
-        data["id"] = str(uuid.uuid4())
+        data["id"] = doc_id
         data["data_processing"] = datetime.now().isoformat()
         return BandoOntology(**data)
     except Exception as e:
@@ -642,9 +650,7 @@ def create_ontology_graph(ontology: BandoOntology) -> Tuple[Dict[str, str], List
     
     # 8. NODI PER DIMENSIONI AMMESSE
     for dim in ontology.dimensioni_ammesse:
-        dim_name = f"DIMENSIONE: {dim}"
-        dim_id = str(uuid.uuid4())
-        nodes[dim_name] = dim_id
+        dim_id = create_unique_node("Dimensione", dim)
         relationships.append({
             "source": bando_id,
             "target": dim_id,
@@ -734,13 +740,11 @@ def create_ontology_graph(ontology: BandoOntology) -> Tuple[Dict[str, str], List
     
     # 7. NODI PER REQUISITI
     for req in ontology.requisiti_beneficiario:
-        req_name = f"REQUISITO: {req}"
-        req_id = str(uuid.uuid4())
-        nodes[req_name] = req_id
+        req_id = create_unique_node("Requisito", req)
         relationships.append({
             "source": bando_id,
             "target": req_id,
-            "type": "RICHIDE",
+            "type": "RICHIEDE",
             "attributes": {"requisito": req}
         })
     
@@ -760,9 +764,7 @@ def create_ontology_graph(ontology: BandoOntology) -> Tuple[Dict[str, str], List
     
     # 9. NODI PER ATTRIBUTI BONUS
     for attributo in ontology.attributi_bonus:
-        attributo_name = f"ATTRIBUTO_BONUS: {attributo}"
-        attributo_id = str(uuid.uuid4())
-        nodes[attributo_name] = attributo_id
+        attributo_id = create_unique_node("AttributoBonus", attributo)
         relationships.append({
             "source": bando_id,
             "target": attributo_id,
@@ -782,86 +784,84 @@ def ingest_to_neo4j(nodes: Dict[str, str], relationships: List[Dict], driver=Non
     
     # Definizione dei tipi di nodo che devono essere unici (MERGE)
     UNIQUE_NODE_PREFIXES = {
+        "BANDO:": "Bando",
         "TEMATICA:": "Tematica", 
         "TIPOLOGIAFONDO:": "TipologiaFondo",
         "TIPOLOGIAAGEVOLAZIONE:": "TipologiaAgevolazione",
         "DESTINATARIO:": "Destinatario",
-        "LOCALIZZAZIONE:": "Localizzazione"
+        "LOCALIZZAZIONE:": "Localizzazione",
+        "DIMENSIONE:": "Dimensione",
+        "REQUISITO:": "Requisito",
+        "ATTRIBUTOBONUS:": "AttributoBonus",
     }
     
     with neo4j_client.session() as session:
-        # Crea nodi
-        for name, node_id in nodes.items():
-            # Determina il tipo di nodo
-            label = None
-            is_unique = False
-            
-            for prefix, node_label in UNIQUE_NODE_PREFIXES.items():
-                if name.startswith(prefix):
-                    label = node_label
-                    is_unique = True
-                    break
-            
-            if not label:
-                # Nodo non unico, determina label dal contenuto
-                if name.startswith("BANDO:"):
-                    label = "Bando"
-                elif name.startswith("DIMENSIONE:"):
-                    label = "Dimensione"
-                elif name.startswith("INTERVENTO"):
-                    label = "Intervento"
-                elif name.startswith("CRITERIO"):
-                    label = "Criterio"
-                elif name.startswith("REQUISITO:"):
-                    label = "Requisito"
-                elif name.startswith("MASSIMALE"):
-                    label = "Massimale"
-                elif name.startswith("IMPORTO"):
-                    label = "Importo"
-                elif name.startswith("ATTRIBUTO_BONUS:"):
-                    label = "AttributoBonus"
+        with session.begin_transaction() as tx:
+            # Crea nodi
+            for name, node_id in nodes.items():
+                # Determina il tipo di nodo
+                label = None
+                is_unique = False
+                
+                for prefix, node_label in UNIQUE_NODE_PREFIXES.items():
+                    if name.startswith(prefix):
+                        label = node_label
+                        is_unique = True
+                        break
+                
+                if not label:
+                    # Nodo non unico, determina label dal contenuto
+                    if name.startswith("INTERVENTO"):
+                        label = "Intervento"
+                    elif name.startswith("CRITERIO"):
+                        label = "Criterio"
+                    elif name.startswith("MASSIMALE"):
+                        label = "Massimale"
+                    elif name.startswith("IMPORTO"):
+                        label = "Importo"
+                    else:
+                        label = "Entity"
+                
+                # Proprietà del nodo
+                props_dict = {"id": node_id, "name": name}
+                
+                # Aggiungi attributi specifici per il bando
+                if label == "Bando" and bando_attrs:
+                    for k, v in bando_attrs.items():
+                        if v is not None:
+                            if isinstance(v, (list, dict)):
+                                props_dict[k] = json.dumps(v, ensure_ascii=False)
+                            else:
+                                props_dict[k] = v
+                
+                props_str = ", ".join([f"n.{k} = ${k}" for k in props_dict.keys()])
+                create_props_str = ", ".join([f"{k}: ${k}" for k in props_dict.keys()])
+
+                # Usa MERGE per nodi unici, CREATE per nodi specifici
+                if is_unique:
+                    query = f"""
+                    MERGE (n:{label} {{id: $id}})
+                    ON CREATE SET n = {{{create_props_str}}}
+                    ON MATCH SET {props_str}
+                    """
                 else:
-                    label = "Entity"
+                    query = f"CREATE (n:{label} {{{create_props_str}}})"
+                
+                tx.run(query, **props_dict)
             
-            # Proprietà del nodo
-            props_dict = {"id": node_id, "name": name}
-            
-            # Aggiungi attributi specifici per il bando
-            if label == "Bando" and bando_attrs:
-                for k, v in bando_attrs.items():
-                    if v is not None:
-                        if isinstance(v, (list, dict)):
-                            props_dict[k] = json.dumps(v, ensure_ascii=False)
-                        else:
-                            props_dict[k] = v
-            
-            props_str = ", ".join([f"{k}: ${k}" for k in props_dict.keys()])
-            
-            # Usa MERGE per nodi unici, CREATE per nodi specifici
-            if is_unique:
-                query = f"""
-                MERGE (n:{label} {{id: $id}})
-                ON CREATE SET n = {{{props_str}}}
-                ON MATCH SET n.name = $name
-                """
-            else:
-                query = f"CREATE (n:{label} {{{props_str}}})"
-            
-            session.run(query, **props_dict)
-        
-        # Crea relazioni (uguale al precedente)
-        for rel in relationships:
-            session.run(
-                """
-                MATCH (a {id: $source_id}), (b {id: $target_id})
-                CREATE (a)-[r:RELATIONSHIP {type: $type}]->(b)
-                SET r += $attributes
-                """,
-                source_id=rel["source"],
-                target_id=rel["target"],
-                type=rel["type"],
-                attributes=rel.get("attributes", {}),
-            )
+            # Crea relazioni
+            for rel in relationships:
+                tx.run(
+                    """
+                    MATCH (a {id: $source_id}), (b {id: $target_id})
+                    MERGE (a)-[r:RELATIONSHIP {type: $type}]->(b)
+                    SET r += $attributes
+                    """,
+                    source_id=rel["source"],
+                    target_id=rel["target"],
+                    type=rel["type"],
+                    attributes=rel.get("attributes", {}),
+                )
     
     print(f"[NEO4J] Ingestiti {len(nodes)} nodi e {len(relationships)} relazioni")
     return nodes
@@ -1091,7 +1091,7 @@ def process_document_pipeline(self, job_id: str, pdf_path: str, collection_name:
         )
         
         # 4. Estrazione ontologia
-        ontology = extract_ontology_from_text(clean_data)
+        ontology = extract_ontology_from_text(clean_data, job_id)
         ontology.file_name = os.path.basename(pdf_path)
         
         # AGGIORNA STATO con dettagli

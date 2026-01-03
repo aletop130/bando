@@ -56,7 +56,7 @@ def retrieve_graph_context(
     search_results = qdrant_client.query_points(
     collection_name=collection_name,
     query=query_vector,  # Nota: il parametro si chiama ora 'query'
-    limit=top_k * 5,  # ← QUI: stai chiedendo 5 volte i chunk necessari
+    limit=top_k,  # ← QUI: stai chiedendo 5 volte i chunk necessari
         )  # ← Questo potrebbe non essere corretto
     
     # Estrai i punti correttamente
